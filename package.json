@@ -10,9 +10,10 @@
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "npm rebuild better-sqlite3 && vitest run",
     "test:watch": "npm rebuild better-sqlite3 && vitest",
-    "rebuild:native": "electron-rebuild -f -w better-sqlite3"
+    "rebuild:native": "electron-rebuild -f -w better-sqlite3,@paymoapp/active-window"
   },
   "dependencies": {
+    "@paymoapp/active-window": "^2.0.0",
     "better-sqlite3": "^9.4.3",
     "sqlite-vec": "^0.1.6"
   },

@@ -1,0 +1,70 @@
+{
+  "exactApp": {
+    "DEEP_WORK": [
+      "Code", "VSCode", "Xcode", "IntelliJ IDEA", "WebStorm", "PyCharm", "PhpStorm",
+      "CLion", "GoLand", "RubyMine", "DataGrip", "Rider", "AppCode",
+      "Figma", "Sketch", "Adobe Photoshop", "Adobe Illustrator", "Adobe XD",
+      "iTerm2", "iTerm", "Terminal", "Warp", "Ghostty", "Alacritty", "kitty", "Hyper",
+      "Vim", "Neovim", "Emacs", "MacVim",
+      "Android Studio", "Eclipse", "NetBeans", "Sublime Text", "Atom"
+    ],
+    "GAMING": [
+      "Steam", "Epic Games Launcher", "Battle.net", "GOG Galaxy",
+      "Minecraft", "League of Legends", "Valorant", "Counter-Strike"
+    ],
+    "VIDEO_CALL": [
+      "zoom.us", "Zoom", "Microsoft Teams", "FaceTime", "Skype",
+      "Webex", "Cisco Webex Meetings"
+    ],
+    "PASSIVE_CONTENT": [
+      "Spotify", "VLC", "IINA", "QuickTime Player", "Music",
+      "Plex", "Infuse", "Movist"
+    ],
+    "STUDY": [
+      "Notion", "Obsidian", "Bear", "Craft", "Roam Research",
+      "Preview", "Adobe Acrobat Reader", "PDF Expert", "Skim"
+    ]
+  },
+  "wordProcessors": [
+    "Microsoft Word", "Pages", "LibreOffice Writer", "Google Docs", "Word"
+  ],
+  "deepWorkMinutes": 20,
+  "browsers": [
+    "Google Chrome", "Firefox", "Safari", "Microsoft Edge",
+    "Arc", "Brave Browser", "Opera", "Vivaldi", "Chromium"
+  ],
+  "urlPatterns": {
+    "VIDEO_CALL": [
+      "meet.google.com",
+      "teams.microsoft.com",
+      "whereby.com",
+      "around.co"
+    ],
+    "PASSIVE_CONTENT": [
+      "youtube.com", "youtube",
+      "netflix.com", "netflix",
+      "twitch.tv", "twitch",
+      "spotify.com", "spotify",
+      "soundcloud.com",
+      "disneyplus.com",
+      "hulu.com",
+      "primevideo.com"
+    ],
+    "STUDY": [
+      "arxiv.org", "arxiv",
+      "coursera.org", "coursera",
+      "khanacademy.org", "khan academy",
+      "udemy.com", "udemy",
+      "edx.org",
+      "brilliant.org",
+      "pluralsight.com",
+      "linkedin.com/learning",
+      "mit.edu",
+      "scholar.google.com"
+    ]
+  },
+  "titleKeywords": {
+    "VIDEO_CALL": ["call", "meeting", "conference", "standup", "sync"]
+  },
+  "idleSeconds": 300
+}

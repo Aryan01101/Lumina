@@ -51,6 +51,25 @@ export default function App(): React.ReactElement {
     setMousePassThrough(true)
   }, [setMousePassThrough])
 
+  // Listen for activity state changes pushed from main process
+  useEffect(() => {
+    const off = window.lumina.activity.onStateChange(({ state }) => {
+      // Map activity state to companion animation
+      // Full auto-hide behavior (Phase 8) — Phase 3 drives animation only
+      if (state === 'DEEP_WORK' || state === 'STUDY') {
+        setAnimationState('sleeping')
+      } else if (state === 'IDLE') {
+        setAnimationState('sleeping')
+      } else if (state === 'LUMINA') {
+        setAnimationState('happy')
+      } else {
+        // BROWSING, PASSIVE_CONTENT, GAMING, VIDEO_CALL
+        setAnimationState('idle')
+      }
+    })
+    return off
+  }, [])
+
   // Listen for agent-initiated messages (Phase 7)
   useEffect(() => {
     const off = window.lumina.agent.onStatus(status => {

@@ -2,6 +2,7 @@ import { app, BrowserWindow } from 'electron'
 import { initDatabase, closeDatabase } from './db'
 import { registerIpcHandlers } from './ipc'
 import { createCompanionWindow } from './window'
+import { startActivityMonitor, stopActivityMonitor } from './activity'
 
 // Prevent second instance
 const gotTheLock = app.requestSingleInstanceLock()
@@ -16,7 +17,9 @@ function bootstrap(mainWindow: BrowserWindow): void {
   // Register all IPC handlers
   registerIpcHandlers(mainWindow)
 
-  // Phase 3: startActivityMonitor(mainWindow)
+  // Start activity monitor (polls active window every 10s)
+  startActivityMonitor(mainWindow)
+
   // Phase 7: startAgentScheduler(mainWindow)
 }
 
@@ -46,5 +49,6 @@ app.on('window-all-closed', () => {
 })
 
 app.on('before-quit', () => {
+  stopActivityMonitor()
   closeDatabase()
 })

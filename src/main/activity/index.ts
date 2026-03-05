@@ -1,12 +1,7 @@
-/**
- * Activity Monitor — Phase 3
- *
- * Polls the active window every 10 seconds using @paymoapp/active-window,
- * classifies the app into one of 8 activity states, manages session records,
- * and pushes state changes to the renderer via IPC.
- *
- * All logic is stubbed until Phase 3.
- */
+import { powerMonitor } from 'electron'
+import type { BrowserWindow } from 'electron'
+import { classify, loadConfig } from './classifier'
+import { openSession, closeSession, getCurrentSessionMinutes } from './sessions'
 
 export type ActivityState =
   | 'DEEP_WORK'
@@ -24,21 +19,98 @@ export interface ActivityInfo {
   startedAt: Date
 }
 
+const POLL_INTERVAL_MS = 10_000
+
 let _currentActivity: ActivityInfo = {
   state: 'BROWSING',
   appName: 'unknown',
   startedAt: new Date()
 }
+let _pollTimer: ReturnType<typeof setInterval> | null = null
+let _degradedMode = false
+let _degradedLogged = false
 
 export function getCurrentActivity(): ActivityInfo {
   return _currentActivity
 }
 
-// Phase 3: start(mainWindow) — wire up @paymoapp/active-window polling
-export function startActivityMonitor(_mainWindow: Electron.BrowserWindow): void {
-  console.log('[Activity] Monitor placeholder — Phase 3 implementation pending')
+export function isDegradedMode(): boolean {
+  return _degradedMode
+}
+
+export function startActivityMonitor(mainWindow: BrowserWindow): void {
+  if (_pollTimer) return
+
+  const config = loadConfig()
+  console.log('[Activity] Monitor started')
+
+  openSession('unknown', 'BROWSING', '')
+
+  const poll = async (): Promise<void> => {
+    try {
+      const idleSeconds = powerMonitor.getSystemIdleTime()
+
+      // Dynamic require keeps the native module out of the test environment
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const { getActiveWindow } = require('@paymoapp/active-window')
+      const activeWindow = await getActiveWindow()
+
+      if (!activeWindow) return
+
+      _degradedMode = false
+      _degradedLogged = false
+
+      const appName: string = activeWindow.application ?? activeWindow.app ?? 'unknown'
+      const windowTitle: string = activeWindow.title ?? ''
+      const sessionMins = getCurrentSessionMinutes()
+
+      const newState = classify(appName, windowTitle, sessionMins, idleSeconds, config)
+
+      if (newState !== _currentActivity.state) {
+        closeSession()
+        openSession(appName, newState, windowTitle)
+
+        _currentActivity = { state: newState, appName, startedAt: new Date() }
+        console.log(`[Activity] → ${newState} (${appName})`)
+
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('activity:state', { state: newState, appName })
+        }
+      }
+    } catch {
+      if (!_degradedLogged) {
+        console.warn('[Activity] Degraded mode — Accessibility permission may be required on macOS')
+        _degradedLogged = true
+        _degradedMode = true
+      }
+    }
+  }
+
+  poll()
+  _pollTimer = setInterval(poll, POLL_INTERVAL_MS)
+
+  powerMonitor.on('suspend', () => {
+    if (_pollTimer) {
+      clearInterval(_pollTimer)
+      _pollTimer = null
+      console.log('[Activity] Polling paused (system suspend)')
+    }
+  })
+
+  powerMonitor.on('resume', () => {
+    if (!_pollTimer) {
+      poll()
+      _pollTimer = setInterval(poll, POLL_INTERVAL_MS)
+      console.log('[Activity] Polling resumed')
+    }
+  })
 }
 
 export function stopActivityMonitor(): void {
-  // Phase 3
+  if (_pollTimer) {
+    clearInterval(_pollTimer)
+    _pollTimer = null
+  }
+  closeSession()
+  console.log('[Activity] Monitor stopped')
 }
