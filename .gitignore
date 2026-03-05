@@ -1,0 +1,36 @@
+node_modules/
+out/
+dist/
+dist-electron/
+*.local
+
+# SQLite database files
+*.db
+*.db-shm
+*.db-wal
+
+# Electron store
+# (userData is in OS app data dir, not project root)
+
+# Build artifacts
+release/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Coverage
+coverage/
+
+# Vitest
+.vitest-cache/
+
+# Python eval (venv)
+tests/eval/.venv/
+tests/eval/__pycache__/
