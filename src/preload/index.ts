@@ -98,5 +98,3 @@ contextBridge.exposeInMainWorld('lumina', {
   }
 })
 
-// Type declaration augmentation for renderer TypeScript
-export type LuminaAPI = typeof window.lumina

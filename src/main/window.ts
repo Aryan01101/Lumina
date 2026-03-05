@@ -33,8 +33,6 @@ export function createCompanionWindow(): BrowserWindow {
     },
     // Don't show until content is ready
     show: false,
-    // Don't appear in mission control as a separate space
-    visibleOnAllWorkspaces: true,
     fullscreenable: false
   })
 
