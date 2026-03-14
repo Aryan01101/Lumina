@@ -32,6 +32,7 @@ export const CREATE_TABLES = `
     chunk_index      INTEGER NOT NULL DEFAULT 0,
     content          TEXT NOT NULL,
     importance_score REAL NOT NULL DEFAULT 0.5,
+    embedding_status TEXT NOT NULL DEFAULT 'pending' CHECK(embedding_status IN ('pending','indexed','failed')),
     retrieval_count  INTEGER NOT NULL DEFAULT 0,
     last_retrieved_at TEXT,
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
@@ -136,6 +137,19 @@ export const CREATE_INDEXES = `
   CREATE INDEX IF NOT EXISTS idx_mood_logs_created_at ON mood_logs(created_at);
   CREATE INDEX IF NOT EXISTS idx_activity_sessions_started_at ON activity_sessions(started_at);
   CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at);
+
+  -- Alarms & Timers
+  CREATE TABLE IF NOT EXISTS alarms (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    type           TEXT NOT NULL CHECK(type IN ('alarm','timer')),
+    trigger_at     TEXT NOT NULL,  -- ISO timestamp when alarm should fire
+    message        TEXT,
+    fired_at       TEXT,
+    dismissed_at   TEXT,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_alarms_trigger ON alarms(trigger_at) WHERE fired_at IS NULL AND dismissed_at IS NULL;
   CREATE INDEX IF NOT EXISTS idx_memory_chunks_source ON memory_chunks(source_type, source_id);
   CREATE INDEX IF NOT EXISTS idx_memory_chunks_importance ON memory_chunks(importance_score DESC);
   CREATE INDEX IF NOT EXISTS idx_ccm_proposals_status ON ccm_proposals(status);
