@@ -2,7 +2,7 @@ import { BrowserWindow, screen } from 'electron'
 import { join } from 'path'
 
 const COMPANION_WIDTH = 340
-const COMPANION_HEIGHT = 500
+const COMPANION_HEIGHT = 640
 
 let mainWindow: BrowserWindow | null = null
 

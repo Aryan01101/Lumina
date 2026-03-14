@@ -1,5 +1,17 @@
-import { ipcMain, BrowserWindow } from 'electron'
+import { ipcMain, BrowserWindow, shell } from 'electron'
 import { getDb } from '../db'
+import { ingestEntry, retrieveRelevant, retryPendingEmbeddings } from '../memory'
+import {
+  getCCM,
+  getPendingProposals,
+  createProposal,
+  resolveProposal,
+  updateCCMSection
+} from '../ccm'
+import { handleChatMessage } from '../chat'
+import { getSettings, setSetting, type AppSettings } from '../settings'
+import { isOllamaAvailable } from '../systemState'
+import { isDegradedMode } from '../activity'
 
 /**
  * Registers all IPC handlers for the main process.
@@ -20,9 +32,14 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
       VALUES (?, ?, ?)
     `).run(payload.mode, payload.content, payload.guidingQuestion ?? null)
 
-    // Phase 4: trigger background embedding ingestion here
+    const entryId = result.lastInsertRowid as number
+    setImmediate(() => {
+      ingestEntry('journal', entryId, payload.content, payload.mode).catch((err) =>
+        console.error('[Memory] Background ingest failed:', err)
+      )
+    })
 
-    return { id: result.lastInsertRowid, created_at: new Date().toISOString() }
+    return { id: entryId, created_at: new Date().toISOString() }
   })
 
   // ─── Chat ─────────────────────────────────────────────────────────────────
@@ -31,14 +48,59 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     content: string
     conversationId: string
   }) => {
-    // Phase 6: implement memory-grounded chat with Ollama streaming
-    console.log('[IPC] chat:message — Phase 6 implementation pending', payload.conversationId)
+    if (typeof payload.content !== 'string' || payload.content.trim().length === 0) {
+      return { error: 'Empty message' }
+    }
+    const MAX_INPUT_CHARS = 4_000
+    if (payload.content.length > MAX_INPUT_CHARS) {
+      return { error: `Message too long (max ${MAX_INPUT_CHARS} characters)` }
+    }
+    return handleChatMessage(getDb(), mainWindow, payload)
+  })
 
-    // Placeholder: echo back a stub response
-    mainWindow.webContents.send('chat:delta', 'Chat is not yet implemented (Phase 6). ')
-    mainWindow.webContents.send('chat:done', { groundedness_score: null })
+  ipcMain.handle('chat:getHistory', async (_event, payload: { conversationId: number }) => {
+    try {
+      const db = getDb()
+      const messages = db.prepare(`
+        SELECT id, role, content, groundedness_score, created_at
+        FROM messages
+        WHERE conversation_id = ?
+        ORDER BY id ASC
+      `).all(payload.conversationId) as Array<{
+        id: number
+        role: string
+        content: string
+        groundedness_score: number | null
+        created_at: string
+      }>
+      return { messages }
+    } catch (err) {
+      return { error: (err as Error).message, messages: [] }
+    }
+  })
 
-    return { ok: true }
+  ipcMain.handle('chat:listConversations', async () => {
+    try {
+      const db = getDb()
+      const conversations = db.prepare(`
+        SELECT
+          c.id,
+          c.created_at,
+          (SELECT content FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_message,
+          (SELECT created_at FROM messages WHERE conversation_id = c.id ORDER BY id DESC LIMIT 1) as last_message_at
+        FROM conversations c
+        ORDER BY c.id DESC
+        LIMIT 20
+      `).all() as Array<{
+        id: number
+        created_at: string
+        last_message: string | null
+        last_message_at: string | null
+      }>
+      return { conversations }
+    } catch (err) {
+      return { error: (err as Error).message, conversations: [] }
+    }
   })
 
   // ─── Mood ─────────────────────────────────────────────────────────────────
@@ -62,72 +124,144 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   // ─── Memory ───────────────────────────────────────────────────────────────
 
   ipcMain.handle('memory:search', async (_event, payload: { query: string }) => {
-    // Phase 4: hybrid retrieval + reranking
-    console.log('[IPC] memory:search — Phase 4 implementation pending', payload.query)
-    return { chunks: [] }
+    return await retrieveRelevant(payload.query)
   })
 
   // ─── CCM ──────────────────────────────────────────────────────────────────
 
   ipcMain.handle('ccm:get', async () => {
-    const db = getDb()
-    const row = db.prepare('SELECT * FROM companion_core_memory WHERE id = 1').get() as Record<string, string> | undefined
-    if (!row) return { ccm: null }
+    return { ccm: getCCM(getDb()) }
+  })
 
-    return {
-      ccm: {
-        userFacts: JSON.parse(row.user_facts),
-        userPatterns: JSON.parse(row.user_patterns),
-        relationshipNotes: JSON.parse(row.relationship_notes),
-        toneCalibration: JSON.parse(row.tone_calibration),
-        lastUpdatedAt: row.last_updated_at,
-        version: row.version
-      }
+  ipcMain.handle('ccm:update', async (_event, payload: { section: string; data: Record<string, unknown> }) => {
+    try {
+      updateCCMSection(getDb(), payload.section, payload.data)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
     }
   })
 
-  ipcMain.handle('ccm:update', async (_event, payload: { section: string; data: unknown }) => {
-    // Phase 5: full CCM update with version history and proposal flow
-    console.log('[IPC] ccm:update — Phase 5 implementation pending', payload.section)
-    return { ok: true }
+  ipcMain.handle('ccm:resolve', async (_event, payload: { id: number; accept: boolean }) => {
+    try {
+      resolveProposal(getDb(), payload.id, payload.accept)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle('ccm:create-proposal', async (_event, payload: { section: string; key: string; value: unknown }) => {
+    try {
+      const id = createProposal(getDb(), payload.section, payload.key, payload.value, null)
+      return { ok: true, id }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle('ccm:get-pending', async () => {
+    return { proposals: getPendingProposals(getDb()) }
   })
 
   // ─── Settings ─────────────────────────────────────────────────────────────
 
   ipcMain.handle('settings:get', async () => {
-    // Phase 8: return persistent settings from electron-store
-    return {
-      settings: {
-        model: 'llama3.1:8b',
-        activityMonitorEnabled: true,
-        checkinFrequency: 'normal',
-        observability: 'off'
-      }
-    }
+    return { settings: getSettings() }
   })
 
   ipcMain.handle('settings:set', async (_event, payload: { key: string; value: unknown }) => {
-    // Phase 8: persist setting
-    console.log('[IPC] settings:set — Phase 8 implementation pending', payload.key)
-    return { ok: true }
+    try {
+      setSetting(payload.key as keyof AppSettings, payload.value as never)
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
   })
 
   // ─── Metrics ──────────────────────────────────────────────────────────────
 
   ipcMain.handle('metrics:get', async () => {
-    // Phase 9: compute from llm_calls, retrieval_logs, agent_events
     const db = getDb()
 
-    const llmCount = (db.prepare('SELECT COUNT(*) as count FROM llm_calls').get() as { count: number }).count
+    // Median (p50) response latency — last 50 chat LLM calls
+    const latencyRows = db.prepare(`
+      SELECT duration_ms FROM llm_calls
+      WHERE context = 'chat'
+      ORDER BY id DESC LIMIT 50
+    `).all() as { duration_ms: number }[]
+    const latency_p50 = latencyRows.length > 0
+      ? latencyRows.map(r => r.duration_ms).sort((a, b) => a - b)[Math.floor(latencyRows.length / 2)]
+      : null
+
+    // Average groundedness — last 50 scored assistant messages
+    const groundRow = db.prepare(`
+      SELECT AVG(groundedness_score) as avg
+      FROM (
+        SELECT groundedness_score FROM messages
+        WHERE role = 'assistant' AND groundedness_score IS NOT NULL
+        ORDER BY id DESC LIMIT 50
+      )
+    `).get() as { avg: number | null }
+    const groundedness_avg = groundRow?.avg ?? null
+
+    // Agent initiation rate — non-SILENCE actions / total runs
+    const agentTotals = db.prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN action_type != 'SILENCE' THEN 1 ELSE 0 END) as initiated
+      FROM agent_events
+    `).get() as { total: number; initiated: number }
+    const initiation_rate = agentTotals.total > 0
+      ? agentTotals.initiated / agentTotals.total
+      : null
+
+    // Agent dismissal rate — dismissed / (engaged + dismissed)
+    const dismissRow = db.prepare(`
+      SELECT
+        SUM(CASE WHEN user_response = 'dismissed' THEN 1 ELSE 0 END) as dismissed,
+        SUM(CASE WHEN user_response IN ('engaged','dismissed') THEN 1 ELSE 0 END) as responded
+      FROM agent_events
+      WHERE action_type != 'SILENCE'
+    `).get() as { dismissed: number; responded: number }
+    const dismissal_rate = (dismissRow.responded ?? 0) > 0
+      ? dismissRow.dismissed / dismissRow.responded
+      : null
+
+    const llmCount   = (db.prepare('SELECT COUNT(*) as count FROM llm_calls').get() as { count: number }).count
     const agentCount = (db.prepare('SELECT COUNT(*) as count FROM agent_events').get() as { count: number }).count
 
-    return {
-      latency_p50: null,
-      groundedness_avg: null,
-      initiation_rate: null,
-      dismissal_rate: null,
-      llm_call_count: llmCount,
-      agent_event_count: agentCount
+    return { latency_p50, groundedness_avg, initiation_rate, dismissal_rate, llm_call_count: llmCount, agent_event_count: agentCount }
+  })
+
+  // ─── System Status ────────────────────────────────────────────────────────
+
+  ipcMain.handle('system:status', () => ({
+    ollamaOk: isOllamaAvailable(),
+    activityDegraded: isDegradedMode()
+  }))
+
+  ipcMain.handle('system:retry-embeddings', async () => {
+    await retryPendingEmbeddings()
+    return { ollamaOk: isOllamaAvailable() }
+  })
+
+  ipcMain.handle('shell:open-url', async (_event, url: string) => {
+    await shell.openExternal(url)
+  })
+
+  // ─── Renderer Logs ────────────────────────────────────────────────────────
+
+  ipcMain.on('log:renderer', (_event, payload: { level: 'log' | 'warn' | 'error'; args: unknown[] }) => {
+    const level = payload?.level ?? 'log'
+    const args = payload?.args ?? []
+    const prefix = '[Renderer]'
+    if (level === 'error') {
+      console.error(prefix, ...args)
+    } else if (level === 'warn') {
+      console.warn(prefix, ...args)
+    } else {
+      console.log(prefix, ...args)
     }
   })
 
