@@ -1,0 +1,18 @@
+{
+  "id": "decision-10",
+  "category": "agent_decision",
+  "description": "IDLE in the morning with stable mood and 3 hours since last journal — gentle morning check-in",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 9,
+    "minutes_since_last_initiation": 480,
+    "mood_trend_7d": 0.58,
+    "mood_trend_direction": "stable",
+    "minutes_since_last_journal": 180,
+    "consecutive_dismissals": 0
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CHECKIN"]
+  }
+}

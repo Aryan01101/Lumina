@@ -1,0 +1,18 @@
+{
+  "id": "decision-07",
+  "category": "agent_decision",
+  "description": "BROWSING at end of day with 240 minutes since last initiation — check in about the day",
+  "setup": {
+    "activity_state": "BROWSING",
+    "hour_of_day": 18,
+    "minutes_since_last_initiation": 240,
+    "mood_trend_7d": 0.60,
+    "mood_trend_direction": "stable",
+    "minutes_since_last_journal": 480,
+    "consecutive_dismissals": 1
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CHECKIN"]
+  }
+}

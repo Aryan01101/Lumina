@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-09",
+  "category": "retrieval",
+  "description": "Entries about mindfulness practice, asking about mental wellness",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Did my first 10-minute meditation this morning using the Headspace app. My mind wandered constantly but I kept bringing it back. Apparently that's the whole point.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Skipped meditation for four days. When I finally came back to it today I noticed how much more anxious I've been. The correlation is hard to ignore now.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Tried a body scan meditation before bed. Actually fell asleep during it which I think is a success. Slept more deeply than I have in weeks.",
+        "source_type": "journal"
+      },
+      {
+        "content": "30-day streak on meditation today. My anxiety hasn't disappeared but I feel like I have more space between a stressful moment and my reaction to it.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "How has my mindfulness and mental wellness practice been going?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["meditation", "mindfulness", "anxiety", "stress", "wellness"],
+    "min_groundedness_score": 0.85
+  }
+}

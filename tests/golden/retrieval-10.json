@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-10",
+  "category": "retrieval",
+  "description": "Entries about travel plans, asking about upcoming trips",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Booked flights to Japan for October. Flying into Tokyo, then a few days in Kyoto, and ending in Osaka. I've been planning this trip for two years.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Started learning basic Japanese phrases using an app. Managed to memorize how to say hello, thank you, and how much does this cost. Small steps.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Researching ryokans in Kyoto. The traditional inn experience seems essential. Some of the options are expensive but I want to do this trip properly.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Made a list of food I must try in Japan: ramen, sushi at Tsukiji, takoyaki in Osaka, and a proper kaiseki meal. The food is honestly the part I'm most excited about.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "What travel plans do I have coming up?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["Japan", "trip", "travel", "Tokyo", "Kyoto"],
+    "min_groundedness_score": 0.85
+  }
+}

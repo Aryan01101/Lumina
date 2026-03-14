@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-05",
+  "category": "retrieval",
+  "description": "User who writes about a project launch and asks about achievements",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Six months of work and we finally launched the app today. Over 400 users signed up in the first 24 hours. I'm overwhelmed with how well it's going.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Got a shoutout from a prominent blogger who said our tool saved them hours every week. That kind of recognition means so much after all the late nights.",
+        "source_type": "journal"
+      },
+      {
+        "content": "The team celebrated with dinner last night. We've been through so much together — the pivots, the failed demos, the all-nighters. So proud of what we built.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Revenue crossed $1K MRR this week. It's a small number but it proves the concept works. Planning to reinvest in marketing next quarter.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "What have I achieved with my project recently?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["launch", "users", "revenue", "achievement", "app"],
+    "min_groundedness_score": 0.85
+  }
+}

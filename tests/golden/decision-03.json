@@ -1,0 +1,18 @@
+{
+  "id": "decision-03",
+  "category": "agent_decision",
+  "description": "IDLE with declining mood trend over the past week — empathetic check-in is the right action",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 15,
+    "minutes_since_last_initiation": 180,
+    "mood_trend_7d": 0.35,
+    "mood_trend_direction": "down",
+    "minutes_since_last_journal": 1440,
+    "consecutive_dismissals": 0
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CHECKIN"]
+  }
+}

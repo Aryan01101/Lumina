@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-08",
+  "category": "retrieval",
+  "description": "Entries about job search, asking about career progress",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Applied to 12 jobs this week. Mostly backend engineer roles. I've been tailoring each cover letter which is exhausting but I think it's the right approach.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Got a rejection from the startup I was most excited about. Stings. The feedback was that I'm not senior enough for the role. Need to build more visible projects.",
+        "source_type": "journal"
+      },
+      {
+        "content": "First interview tomorrow at a mid-size fintech. Nervous but prepared. I've done three mock interviews this week and feel solid on system design.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Passed the technical screen at two companies this week. Both have moved me to final rounds. Starting to feel like the job search is finally getting somewhere.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "How is my job search and career progression going?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["job", "interview", "application", "career", "rejection"],
+    "min_groundedness_score": 0.85
+  }
+}

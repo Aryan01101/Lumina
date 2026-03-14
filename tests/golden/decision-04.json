@@ -1,0 +1,18 @@
+{
+  "id": "decision-04",
+  "category": "agent_decision",
+  "description": "IDLE after a great week with high mood trend — celebrate progress or check in positively",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 16,
+    "minutes_since_last_initiation": 200,
+    "mood_trend_7d": 0.88,
+    "mood_trend_direction": "up",
+    "minutes_since_last_journal": 90,
+    "consecutive_dismissals": 0
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CELEBRATE", "CHECKIN"]
+  }
+}

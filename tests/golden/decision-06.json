@@ -1,0 +1,18 @@
+{
+  "id": "decision-06",
+  "category": "agent_decision",
+  "description": "IDLE with very low mood trend — prioritise empathetic check-in over any other action",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 13,
+    "minutes_since_last_initiation": 210,
+    "mood_trend_7d": 0.15,
+    "mood_trend_direction": "down",
+    "minutes_since_last_journal": 720,
+    "consecutive_dismissals": 0
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CHECKIN"]
+  }
+}

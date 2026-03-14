@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-04",
+  "category": "retrieval",
+  "description": "User who journals about relationships and asks about social life",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Had coffee with Sarah for the first time in months. It felt awkward at first but we ended up talking for three hours. I miss having close friendships like that.",
+        "source_type": "journal"
+      },
+      {
+        "content": "My relationship with my brother has been strained lately. We argued over our parents' health situation and haven't spoken since. I don't know how to bridge it.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Met someone interesting at the book club tonight. We ended up talking the whole time instead of discussing the book. Got their number — might grab lunch.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Feeling lonely lately. Work from home means I go days without real human interaction. Need to be more intentional about making plans with people.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "How has my social life and relationships been lately?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["friendship", "relationship", "social", "lonely", "people"],
+    "min_groundedness_score": 0.82
+  }
+}

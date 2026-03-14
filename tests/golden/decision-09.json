@@ -1,0 +1,18 @@
+{
+  "id": "decision-09",
+  "category": "agent_decision",
+  "description": "PASSIVE_CONTENT with no mood data available — default to check-in or nudge without assumptions",
+  "setup": {
+    "activity_state": "PASSIVE_CONTENT",
+    "hour_of_day": 20,
+    "minutes_since_last_initiation": 170,
+    "mood_trend_7d": null,
+    "mood_trend_direction": null,
+    "minutes_since_last_journal": 1440,
+    "consecutive_dismissals": 0
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CHECKIN", "NUDGE"]
+  }
+}

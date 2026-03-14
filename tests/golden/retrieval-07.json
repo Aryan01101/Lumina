@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-07",
+  "category": "retrieval",
+  "description": "Journal about cooking experiments, asking about hobbies",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Attempted to make homemade pasta from scratch today. It was messier than expected but the result was genuinely better than store-bought. Totally worth the effort.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Tried a Thai green curry recipe. I couldn't find galangal at any store nearby so I substituted ginger. It tasted good but wasn't quite right — need to find an Asian grocery.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Hosted a dinner party for 6 people. Made three courses. Everyone loved the lamb chops. A friend asked for the recipe — felt great as a self-taught cook.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Bought a new cookbook focused on fermentation. Sourdough starter is sitting on my counter. Day 3 of feeding it — no bubbles yet but I'm being patient.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "What hobbies have I been spending time on lately?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["cooking", "recipe", "pasta", "dinner", "food"],
+    "min_groundedness_score": 0.82
+  }
+}

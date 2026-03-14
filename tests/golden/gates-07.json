@@ -1,0 +1,21 @@
+{
+  "id": "gates-07",
+  "category": "agent_gates",
+  "description": "BROWSING at 9am with 5 consecutive dismissals — gate 5 holds (dismissal backoff active)",
+  "setup": {
+    "activity_state": "BROWSING",
+    "hour_of_day": 9,
+    "minutes_since_last_initiation": 150,
+    "consecutive_dismissals": 5,
+    "paused_until": null
+  },
+  "expected": {
+    "gate_1": "pass",
+    "gate_2": "pass",
+    "gate_3": "pass",
+    "gate_4": "pass",
+    "gate_5": "hold",
+    "overall": "hold",
+    "action_type": "SILENCE"
+  }
+}

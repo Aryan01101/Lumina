@@ -1,0 +1,35 @@
+{
+  "id": "retrieval-06",
+  "category": "retrieval",
+  "description": "Multiple journal entries about sleep habits, asking for patterns",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Went to bed at midnight again. Woke up at 6am feeling groggy. I keep telling myself I'll go to bed earlier but then I end up scrolling my phone.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Actually slept 8 hours last night — went to bed at 10pm after cutting off screens at 9. Felt amazing in the morning. Why don't I do this every night?",
+        "source_type": "journal"
+      },
+      {
+        "content": "Woke up three times last night. Too much coffee after 2pm I think. My sleep tracker shows my deep sleep was only 45 minutes total.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Trying the no-phone-after-9pm rule for a week. Day 2. It's harder than I expected but I did fall asleep faster.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Really tired today. Stayed up until 1am watching a show. Not worth it. My mood is noticeably worse when I get under 7 hours.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "What patterns do you notice in my sleep habits?",
+  "expected": {
+    "min_retrieved_chunks": 3,
+    "expected_content_keywords": ["sleep", "bed", "tired", "morning", "phone", "hours"],
+    "min_groundedness_score": 0.83
+  }
+}

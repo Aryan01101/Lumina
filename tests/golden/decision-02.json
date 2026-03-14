@@ -1,0 +1,18 @@
+{
+  "id": "decision-02",
+  "category": "agent_decision",
+  "description": "BROWSING with stable mood and long time since last journal — nudge or check-in to prompt reflection",
+  "setup": {
+    "activity_state": "BROWSING",
+    "hour_of_day": 14,
+    "minutes_since_last_initiation": 130,
+    "mood_trend_7d": 0.55,
+    "mood_trend_direction": "stable",
+    "minutes_since_last_journal": 2880,
+    "consecutive_dismissals": 1
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CHECKIN", "NUDGE"]
+  }
+}

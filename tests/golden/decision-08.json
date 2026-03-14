@@ -1,0 +1,18 @@
+{
+  "id": "decision-08",
+  "category": "agent_decision",
+  "description": "IDLE with near-perfect mood trend and recently journaled — celebrate the positive momentum",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 15,
+    "minutes_since_last_initiation": 160,
+    "mood_trend_7d": 0.92,
+    "mood_trend_direction": "up",
+    "minutes_since_last_journal": 45,
+    "consecutive_dismissals": 0
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CELEBRATE", "CHECKIN"]
+  }
+}

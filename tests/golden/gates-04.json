@@ -1,0 +1,22 @@
+{
+  "id": "gates-04",
+  "category": "agent_gates",
+  "description": "IDLE at 2pm with 50 minutes since last, scheduled trigger — gate 3 holds (120min threshold not met)",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 14,
+    "minutes_since_last_initiation": 50,
+    "consecutive_dismissals": 0,
+    "paused_until": null,
+    "trigger_type": "scheduled"
+  },
+  "expected": {
+    "gate_1": "pass",
+    "gate_2": "pass",
+    "gate_3": "hold",
+    "gate_4": "skip",
+    "gate_5": "skip",
+    "overall": "hold",
+    "action_type": "SILENCE"
+  }
+}

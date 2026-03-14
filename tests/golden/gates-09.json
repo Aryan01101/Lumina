@@ -1,0 +1,21 @@
+{
+  "id": "gates-09",
+  "category": "agent_gates",
+  "description": "IDLE at 11pm — gate 2 blocks due to outside allowed hours (past 10pm cutoff)",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 23,
+    "minutes_since_last_initiation": 200,
+    "consecutive_dismissals": 0,
+    "paused_until": null
+  },
+  "expected": {
+    "gate_1": "pass",
+    "gate_2": "hold",
+    "gate_3": "skip",
+    "gate_4": "skip",
+    "gate_5": "skip",
+    "overall": "hold",
+    "action_type": "SILENCE"
+  }
+}

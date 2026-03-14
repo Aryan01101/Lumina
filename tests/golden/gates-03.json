@@ -1,0 +1,21 @@
+{
+  "id": "gates-03",
+  "category": "agent_gates",
+  "description": "IDLE at 3am — gate 2 blocks due to outside allowed hours (8am–10pm)",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 3,
+    "minutes_since_last_initiation": 480,
+    "consecutive_dismissals": 0,
+    "paused_until": null
+  },
+  "expected": {
+    "gate_1": "pass",
+    "gate_2": "hold",
+    "gate_3": "skip",
+    "gate_4": "skip",
+    "gate_5": "skip",
+    "overall": "hold",
+    "action_type": "SILENCE"
+  }
+}

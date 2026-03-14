@@ -1,0 +1,22 @@
+{
+  "id": "gates-05",
+  "category": "agent_gates",
+  "description": "IDLE at 2pm with 65 minutes since last, transition trigger — gate 3 passes (60min threshold met)",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 14,
+    "minutes_since_last_initiation": 65,
+    "consecutive_dismissals": 0,
+    "paused_until": null,
+    "trigger_type": "transition"
+  },
+  "expected": {
+    "gate_1": "pass",
+    "gate_2": "pass",
+    "gate_3": "pass",
+    "gate_4": "pass",
+    "gate_5": "pass",
+    "overall": "pass",
+    "action_type": "INITIATE"
+  }
+}

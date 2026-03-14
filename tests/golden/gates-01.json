@@ -1,0 +1,21 @@
+{
+  "id": "gates-01",
+  "category": "agent_gates",
+  "description": "DEEP_WORK state blocks at gate 1 — companion must never interrupt deep focus",
+  "setup": {
+    "activity_state": "DEEP_WORK",
+    "hour_of_day": 14,
+    "minutes_since_last_initiation": 300,
+    "consecutive_dismissals": 0,
+    "paused_until": null
+  },
+  "expected": {
+    "gate_1": "hold",
+    "gate_2": "skip",
+    "gate_3": "skip",
+    "gate_4": "skip",
+    "gate_5": "skip",
+    "overall": "hold",
+    "action_type": "SILENCE"
+  }
+}

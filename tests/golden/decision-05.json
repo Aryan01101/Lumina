@@ -1,0 +1,18 @@
+{
+  "id": "decision-05",
+  "category": "agent_decision",
+  "description": "PASSIVE_CONTENT with moderate mood and no recent journal — nudge toward reflection or check in",
+  "setup": {
+    "activity_state": "PASSIVE_CONTENT",
+    "hour_of_day": 19,
+    "minutes_since_last_initiation": 150,
+    "mood_trend_7d": 0.52,
+    "mood_trend_direction": "stable",
+    "minutes_since_last_journal": 4320,
+    "consecutive_dismissals": 0
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["NUDGE", "CHECKIN"]
+  }
+}

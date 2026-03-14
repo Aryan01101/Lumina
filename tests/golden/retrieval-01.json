@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-01",
+  "category": "retrieval",
+  "description": "User who journals about running and asks about fitness goals",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Ran 5 miles this morning before work. Felt great — best time yet at 42 minutes. I want to work up to a 10K by the end of the year.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Skipped my run today because of the rain. Feeling guilty. I need to be more consistent if I want to hit my marathon goal.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Signed up for the local 5K race next month. Nervous but excited. Training plan says I need to add interval sprints twice a week.",
+        "source_type": "journal"
+      },
+      {
+        "content": "My knee has been bothering me after long runs. Going to rest for a few days and then ease back in. Don't want to injure myself before the race.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "What are my fitness goals and how is my running progress going?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["run", "marathon", "5K", "training", "goal"],
+    "min_groundedness_score": 0.85
+  }
+}

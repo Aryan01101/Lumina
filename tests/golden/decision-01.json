@@ -1,0 +1,20 @@
+{
+  "id": "decision-01",
+  "category": "agent_decision",
+  "description": "IDLE after a long DEEP_WORK session with good mood trend — companion celebrates or checks in",
+  "setup": {
+    "activity_state": "IDLE",
+    "hour_of_day": 17,
+    "minutes_since_last_initiation": 240,
+    "mood_trend_7d": 0.72,
+    "mood_trend_direction": "up",
+    "minutes_since_last_journal": 180,
+    "consecutive_dismissals": 0,
+    "previous_activity_state": "DEEP_WORK",
+    "minutes_in_previous_state": 150
+  },
+  "expected": {
+    "overall": "pass",
+    "action_type_one_of": ["CHECKIN", "CELEBRATE"]
+  }
+}

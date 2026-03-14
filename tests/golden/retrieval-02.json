@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-02",
+  "category": "retrieval",
+  "description": "User who writes about work stress and asks about recent challenges",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Deadline crunch this week. Three PRs to review, two features to ship, and the PM keeps adding scope. I'm barely keeping my head above water.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Had a difficult conversation with my manager today about workload. She acknowledged that the team is stretched thin but couldn't give me concrete relief. Frustrating.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Couldn't sleep last night thinking about the product launch. So much could go wrong. I keep running worst-case scenarios in my head.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Finally shipped the feature. It went live without any incidents. Feeling relieved but already dreading the next sprint planning.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "What work challenges have I been dealing with recently?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["deadline", "workload", "stress", "launch", "manager"],
+    "min_groundedness_score": 0.85
+  }
+}

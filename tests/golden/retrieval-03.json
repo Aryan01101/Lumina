@@ -1,0 +1,31 @@
+{
+  "id": "retrieval-03",
+  "category": "retrieval",
+  "description": "User who journals about learning piano and asks about music practice",
+  "setup": {
+    "memory_chunks": [
+      {
+        "content": "Started piano lessons last week. My teacher assigned me a simple C major scale and a short piece called 'Ode to Joy'. My fingers feel so stiff.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Practiced for 30 minutes today. The left hand and right hand coordination is really hard. I kept stopping to reset. Frustrated but not giving up.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Breakthrough today — I played through the whole piece without stopping! It was slow, but it was complete. My teacher said I'm making fast progress for a beginner.",
+        "source_type": "journal"
+      },
+      {
+        "content": "Looking up Chopin nocturnes on YouTube. That's the kind of music I eventually want to play. Feels impossibly far away right now but I'm motivated.",
+        "source_type": "journal"
+      }
+    ]
+  },
+  "query": "How is my piano practice going and what am I working on?",
+  "expected": {
+    "min_retrieved_chunks": 2,
+    "expected_content_keywords": ["piano", "practice", "lessons", "piece", "teacher"],
+    "min_groundedness_score": 0.85
+  }
+}
