@@ -17,7 +17,7 @@ let _config: ClassifierConfig | null = null
 export function loadConfig(configPath?: string): ClassifierConfig {
   if (_config) return _config
 
-  const path = configPath ?? join(__dirname, '../../../resources/activity-classifier.json')
+  const path = configPath ?? join(process.cwd(), 'resources/activity-classifier.json')
   const raw = readFileSync(path, 'utf-8')
   _config = JSON.parse(raw) as ClassifierConfig
   return _config

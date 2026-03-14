@@ -52,8 +52,8 @@ export function startActivityMonitor(mainWindow: BrowserWindow): void {
 
       // Dynamic require keeps the native module out of the test environment
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { getActiveWindow } = require('@paymoapp/active-window')
-      const activeWindow = await getActiveWindow()
+      const { ActiveWindow } = require('@paymoapp/active-window')
+      const activeWindow = ActiveWindow.getActiveWindow()
 
       if (!activeWindow) return
 
@@ -77,11 +77,16 @@ export function startActivityMonitor(mainWindow: BrowserWindow): void {
           mainWindow.webContents.send('activity:state', { state: newState, appName })
         }
       }
-    } catch {
+    } catch (err: unknown) {
       if (!_degradedLogged) {
+        const msg = err instanceof Error ? err.message : String(err)
+        console.error('[Activity] Monitor error:', msg)
         console.warn('[Activity] Degraded mode — Accessibility permission may be required on macOS')
         _degradedLogged = true
         _degradedMode = true
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('activity:degraded')
+        }
       }
     }
   }
