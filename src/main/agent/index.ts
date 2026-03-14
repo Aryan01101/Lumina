@@ -7,53 +7,97 @@
  *   3. Analyse     — embeds observation → hybrid retrieval → LLM analysis
  *   4. Decide      — LLM selects CELEBRATE | CHECKIN | NUDGE | SILENCE
  *   5. Act         — if not SILENCE, generate grounded message → push to renderer
- *   6. Log         — write agent_event to SQLite, emit Langfuse if enabled
+ *   6. Log         — write agent_event to SQLite
  *
  * Scheduled: node-cron every 30 minutes + triggered on activity state transitions.
  * Gate 1 is absolute — DEEP_WORK / STUDY / GAMING / VIDEO_CALL always HOLD.
- *
- * All logic is stubbed until Phase 7.
  */
+
+import { randomUUID } from 'crypto'
+import type { BrowserWindow } from 'electron'
+import { getDb } from '../db'
+import { getCurrentActivity } from '../activity'
+import { runAgentGraph } from './graph'
+import { startScheduler, stopScheduler } from './scheduler'
+
+export type ActivityState = 'DEEP_WORK' | 'STUDY' | 'GAMING' | 'VIDEO_CALL' |
+  'PASSIVE_CONTENT' | 'BROWSING' | 'IDLE' | 'LUMINA'
 
 export type ActionType = 'CELEBRATE' | 'CHECKIN' | 'NUDGE' | 'SILENCE'
 
+export type AgentTrigger = 'scheduled' | 'transition'
+
 export interface AgentState {
-  activityState: string
-  lastJournalAt: string | null
-  lastConversationAt: string | null
-  moodTrend7d: number | null
-  moodTrendDirection: 'up' | 'down' | 'flat' | null
-  timeOfDay: string
-  gateResults: Record<string, 'pass' | 'hold'>
-  retrievedMemories: unknown[]
-  analysis: string
-  actionType: ActionType
-  message: string | null
+  trigger:               AgentTrigger
+  activityState:         ActivityState
+  isTransition:          boolean
+  transitionContext:     string
+  timeOfDay:             string
+  lastInitiationAt:      string | null
+  consecutiveDismissals: number
+  pausedUntil:           string | null
+  lastJournalAt:         string | null
+  lastConversationAt:    string | null
+  moodTrend7d:           number | null
+  moodTrendDirection:    'up' | 'down' | 'flat' | null
+  gateResults:           Record<string, 'pass' | 'hold'>
+  retrievedMemories:     string[]
+  analysis:              string
+  actionType:            ActionType
+  message:               string | null
+  runId:                 string
 }
 
-// Phase 7: start the agent scheduler
-export function startAgentScheduler(_mainWindow: Electron.BrowserWindow): void {
-  console.log('[Agent] Scheduler placeholder — Phase 7 implementation pending')
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+export function startAgentScheduler(mainWindow: BrowserWindow): void {
+  startScheduler(mainWindow)
 }
 
 export function stopAgentScheduler(): void {
-  // Phase 7
+  stopScheduler()
 }
 
-// Phase 7: run a single agent loop cycle (exported for testing)
-export async function runAgentCycle(_trigger: 'scheduled' | 'transition'): Promise<AgentState> {
-  console.log('[Agent] Cycle placeholder — Phase 7 implementation pending')
-  return {
-    activityState: 'BROWSING',
-    lastJournalAt: null,
-    lastConversationAt: null,
-    moodTrend7d: null,
-    moodTrendDirection: null,
-    timeOfDay: new Date().toISOString(),
-    gateResults: {},
-    retrievedMemories: [],
-    analysis: '',
-    actionType: 'SILENCE',
-    message: null
+/**
+ * Runs one agent cycle. Accepts optional mainWindow and db for testability
+ * (production code uses getDb() and the stored window reference).
+ */
+export async function runAgentCycle(
+  trigger: AgentTrigger,
+  mainWindow?: BrowserWindow,
+  db?: ReturnType<typeof getDb>,
+  nowIso?: string
+): Promise<AgentState> {
+  const resolvedDb  = db  ?? getDb()
+  const activity    = getCurrentActivity()
+  const now         = nowIso ?? new Date().toISOString()
+
+  const initialState: AgentState = {
+    trigger,
+    activityState:         activity.state as ActivityState,
+    isTransition:          trigger === 'transition',
+    transitionContext:     trigger === 'transition' ? `from ${activity.state}` : '',
+    timeOfDay:             now,
+    lastInitiationAt:      null,
+    consecutiveDismissals: 0,
+    pausedUntil:           null,
+    lastJournalAt:         null,
+    lastConversationAt:    null,
+    moodTrend7d:           null,
+    moodTrendDirection:    null,
+    gateResults:           {},
+    retrievedMemories:     [],
+    analysis:              '',
+    actionType:            'SILENCE',
+    message:               null,
+    runId:                 randomUUID()
   }
+
+  // Provide a no-op window if none supplied (test/offline scenarios)
+  const win = mainWindow ?? {
+    webContents: { send: () => {} },
+    isDestroyed: () => true
+  } as unknown as BrowserWindow
+
+  return runAgentGraph(initialState, win, resolvedDb)
 }
