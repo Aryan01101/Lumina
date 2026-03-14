@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  # ── Unit Tests (runs on every push) ────────────────────────────────────────
+  # ── Unit Tests + Typecheck (runs on every push) ─────────────────────────────
   unit-tests:
     name: Unit Tests
     runs-on: macos-latest
@@ -29,11 +29,36 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
-      - name: Run unit tests
+      - name: Run unit tests (350 tests — all must pass)
         run: npm test
 
-  # ── Eval Pipeline (Phase 10 — runs on main branch only) ───────────────────
-  # TODO Phase 10: uncomment and implement
+  # ── Golden Gate Scenarios (Phase 10 — deterministic, no LLM) ───────────────
+  eval-gates:
+    name: Golden Gate Scenarios
+    runs-on: macos-latest
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Rebuild native modules
+        run: npm run rebuild:native
+
+      - name: Run golden gate scenarios (10 scenarios — all must pass)
+        run: npm test -- tests/unit/eval.gates.test.ts
+
+  # ── RAGAS + DeepEval Pipeline (Phase 10 — LLM-dependent, main branch only) ─
+  # Requires Ollama to be running with the required models pulled.
+  # Deferred until CI has GPU runners or hosted Ollama endpoint.
+  #
   # eval-pipeline:
   #   name: AI Evaluation Pipeline
   #   runs-on: ubuntu-latest
@@ -54,18 +79,9 @@ jobs:
   #     - name: Run RAGAS evaluation
   #       run: python tests/eval/run_eval.py
   #       env:
-  #         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}  # used by RAGAS judge
-  #
-  #     - name: Upload eval results
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: eval-results-${{ github.sha }}
-  #         path: tests/eval/results/
+  #         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
   #
   #     - name: Check thresholds
   #       run: python tests/eval/check_thresholds.py
-  #       # Fails CI if:
-  #       #   RAGAS faithfulness < 0.83
-  #       #   groundedness < 0.86
-  #       #   any DeepEval test fails
-  #       #   any agent gate test fails
+  #       # Fails CI if RAGAS faithfulness < 0.83, groundedness < 0.86,
+  #       # or any DeepEval test fails
