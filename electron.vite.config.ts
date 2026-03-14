@@ -8,7 +8,8 @@ export default defineConfig({
     build: {
       rollupOptions: {
         input: {
-          index: resolve(__dirname, 'src/main/index.ts')
+          index: resolve(__dirname, 'src/main/index.ts'),
+          'rerank.worker': resolve(__dirname, 'src/main/memory/rerank.worker.ts')
         }
       }
     }
@@ -30,6 +31,10 @@ export default defineConfig({
       }
     },
     plugins: [react()],
+    server: {
+      host: '127.0.0.1',
+      port: 5173
+    },
     build: {
       rollupOptions: {
         input: {
