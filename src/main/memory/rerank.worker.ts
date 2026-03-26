@@ -53,8 +53,24 @@ async function main(): Promise<void> {
     try {
       const model = await getReranker()
 
+      // Validate and sanitize inputs
+      const query = String(msg.query || '')
+      const candidates = (msg.candidates || []).map((c) => String(c || ''))
+
+      if (!query.trim() || candidates.length === 0) {
+        parentPort.postMessage({
+          id: msg.id,
+          scores: candidates.map(() => 0)
+        })
+        return
+      }
+
       // Score each [query, candidate] pair
-      const pairs = msg.candidates.map((candidate) => [msg.query, candidate])
+      // Use object format {text, text_pair} for cross-encoder models
+      const pairs = candidates.map((candidate) => ({
+        text: query,
+        text_pair: candidate
+      }))
       const results = await model(pairs, { topk: null })
 
       // Extract the relevance score from each result
@@ -63,15 +79,16 @@ async function main(): Promise<void> {
         ? results.map((r: { label: string; score: number }) =>
             r.label === 'LABEL_1' ? r.score : 1 - r.score
           )
-        : msg.candidates.map(() => 0)
+        : candidates.map(() => 0)
 
       parentPort.postMessage({ id: msg.id, scores })
     } catch (err) {
       console.error('[Reranker] Scoring failed:', err)
+      const fallbackCandidates = (msg.candidates || []).map(() => 0)
       parentPort.postMessage({
         id: msg.id,
         error: (err as Error).message,
-        scores: msg.candidates.map(() => 0)
+        scores: fallbackCandidates
       })
     }
   })

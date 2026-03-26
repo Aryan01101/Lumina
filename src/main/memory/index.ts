@@ -212,7 +212,8 @@ export async function retrieveRelevant(query: string, topK = 5): Promise<Retriev
 
   if (candidates.length > 0) {
     // Stage 2: cross-encoder reranking
-    const texts = candidates.map((c) => c.content)
+    // Ensure all content is valid strings (convert null/undefined to empty string)
+    const texts = candidates.map((c) => String(c.content || ''))
     const scores = await rerankCandidates(query, texts)
 
     const ranked = candidates

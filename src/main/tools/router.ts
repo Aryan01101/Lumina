@@ -7,9 +7,10 @@
 
 import { detectCalculation, calculate, type CalculatorResult } from './calculator'
 import { detectAlarm } from './alarms'
+import { createTodo, completeTodo, listTodos } from '../todos'
 import type Database from 'better-sqlite3'
 
-export type ToolType = 'calculator' | 'alarm' | 'timer' | 'schedule' | null
+export type ToolType = 'calculator' | 'alarm' | 'timer' | 'schedule' | 'add_todo' | 'complete_todo' | 'list_todos' | null
 
 export interface ToolResult {
   tool: ToolType
@@ -58,6 +59,53 @@ export function routeTools(userMessage: string, db?: Database.Database): ToolRes
     }
   }
 
+  // Try todo operations (requires database)
+  if (db) {
+    // Add todo detection
+    const addTodoMatch = userMessage.match(/(?:add|create|make)\s+(?:a\s+)?(?:todo|task|reminder)(?:\s+to)?\s+(.+)/i)
+    if (addTodoMatch) {
+      const content = addTodoMatch[1].trim()
+      if (content.length > 2) {
+        try {
+          const id = createTodo(db, content, { aiSuggested: true })
+          return {
+            tool: 'add_todo',
+            success: true,
+            data: { id, content },
+            message: `Added todo: "${content}"`
+          }
+        } catch (err) {
+          return {
+            tool: 'add_todo',
+            success: false,
+            message: `Could not add todo: ${(err as Error).message}`
+          }
+        }
+      }
+    }
+
+    // List todos detection
+    if (/(show|list|what are)\s+(?:my\s+)?(?:todos|tasks)/i.test(userMessage)) {
+      try {
+        const todos = listTodos(db, 'pending')
+        return {
+          tool: 'list_todos',
+          success: true,
+          data: { todos },
+          message: todos.length > 0
+            ? `You have ${todos.length} pending todo${todos.length === 1 ? '' : 's'}`
+            : 'No pending todos'
+        }
+      } catch (err) {
+        return {
+          tool: 'list_todos',
+          success: false,
+          message: `Could not list todos: ${(err as Error).message}`
+        }
+      }
+    }
+  }
+
   // TODO: Add schedule detection
 
   return null
@@ -87,6 +135,20 @@ export function formatToolResultForContext(toolResult: ToolResult): string {
         hour12: true
       })
       return `[${toolResult.tool === 'alarm' ? 'Alarm' : 'Timer'}] Set for ${timeStr}${data.message ? ` - ${data.message}` : ''}`
+    }
+
+    case 'add_todo': {
+      const data = toolResult.data as { id: number; content: string }
+      return `[Todo Added] "${data.content}"`
+    }
+
+    case 'list_todos': {
+      const data = toolResult.data as { todos: Array<{ id: number; content: string }> }
+      if (data.todos.length === 0) {
+        return '[Todos] No pending todos'
+      }
+      const todoList = data.todos.slice(0, 5).map((t, i) => `${i + 1}. ${t.content}`).join('\n')
+      return `[Todos] Pending tasks:\n${todoList}${data.todos.length > 5 ? `\n... and ${data.todos.length - 5} more` : ''}`
     }
 
     default:

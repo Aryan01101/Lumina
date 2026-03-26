@@ -33,17 +33,29 @@ export function initFileLogger(): void {
   console.log = (...args: unknown[]) => {
     const line = formatArgs(args)
     write('INFO', args)
-    process.stdout.write(line + '\n')
+    try {
+      process.stdout.write(line + '\n')
+    } catch (err) {
+      // Suppress EPIPE errors when stdout is closed (e.g., worker thread exit)
+    }
   }
   console.warn = (...args: unknown[]) => {
     const line = formatArgs(args)
     write('WARN', args)
-    process.stderr.write('[WARN] ' + line + '\n')
+    try {
+      process.stderr.write('[WARN] ' + line + '\n')
+    } catch (err) {
+      // Suppress EPIPE errors when stderr is closed (e.g., worker thread exit)
+    }
   }
   console.error = (...args: unknown[]) => {
     const line = formatArgs(args)
     write('ERROR', args)
-    process.stderr.write('[ERROR] ' + line + '\n')
+    try {
+      process.stderr.write('[ERROR] ' + line + '\n')
+    } catch (err) {
+      // Suppress EPIPE errors when stderr is closed (e.g., worker thread exit)
+    }
   }
 }
 

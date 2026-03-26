@@ -91,6 +91,15 @@ export async function rerankCandidates(
 ): Promise<number[]> {
   if (candidates.length === 0) return []
 
+  // Validate inputs - ensure query and all candidates are valid strings
+  const validQuery = String(query || '')
+  const validCandidates = candidates.map((c) => String(c || ''))
+
+  if (!validQuery.trim()) {
+    console.warn('[Reranker] Empty query, returning zero scores')
+    return validCandidates.map(() => 0)
+  }
+
   // Lazily spawn worker on first call
   if (!worker) {
     spawnWorker()
@@ -123,7 +132,7 @@ export async function rerankCandidates(
       resolve(scores)
     })
 
-    worker!.postMessage({ id, query, candidates })
+    worker!.postMessage({ id, query: validQuery, candidates: validCandidates })
   })
 }
 

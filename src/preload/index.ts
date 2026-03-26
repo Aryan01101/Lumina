@@ -39,13 +39,13 @@ contextBridge.exposeInMainWorld('lumina', {
     },
 
     onToolResult: (callback: (result: {
-      tool: 'calculator' | 'alarm' | 'timer' | 'schedule'
+      tool: 'calculator' | 'alarm' | 'timer' | 'schedule' | 'add_todo' | 'complete_todo' | 'list_todos'
       success: boolean
       data?: unknown
       message?: string
     }) => void) => {
       const handler = (_: Electron.IpcRendererEvent, result: {
-        tool: 'calculator' | 'alarm' | 'timer' | 'schedule'
+        tool: 'calculator' | 'alarm' | 'timer' | 'schedule' | 'add_todo' | 'complete_todo' | 'list_todos'
         success: boolean
         data?: unknown
         message?: string
@@ -59,6 +59,33 @@ contextBridge.exposeInMainWorld('lumina', {
   mood: {
     log: (payload: { value: 'frustrated' | 'okay' | 'good' | 'amazing' }) =>
       ipcRenderer.invoke('mood:log', payload)
+  },
+
+  // ─── Todos ───────────────────────────────────────────────────────────────
+  todos: {
+    create: (payload: { content: string; priority?: number; dueDate?: string; aiSuggested?: boolean }) =>
+      ipcRenderer.invoke('todos:create', payload),
+
+    list: (payload?: { status?: 'pending' | 'completed' }) =>
+      ipcRenderer.invoke('todos:list', payload),
+
+    get: (payload: { id: number }) =>
+      ipcRenderer.invoke('todos:get', payload),
+
+    complete: (payload: { id: number }) =>
+      ipcRenderer.invoke('todos:complete', payload),
+
+    uncomplete: (payload: { id: number }) =>
+      ipcRenderer.invoke('todos:uncomplete', payload),
+
+    update: (payload: { id: number; content?: string; priority?: number; dueDate?: string | null }) =>
+      ipcRenderer.invoke('todos:update', payload),
+
+    delete: (payload: { id: number }) =>
+      ipcRenderer.invoke('todos:delete', payload),
+
+    stats: () =>
+      ipcRenderer.invoke('todos:stats')
   },
 
   // ─── Memory ──────────────────────────────────────────────────────────────
@@ -103,6 +130,9 @@ contextBridge.exposeInMainWorld('lumina', {
 
   // ─── Activity state (pushed from main) ────────────────────────────────────
   activity: {
+    getCurrentSession: () =>
+      ipcRenderer.invoke('activity:getCurrentSession'),
+
     onStateChange: (callback: (state: { state: string; appName: string }) => void) => {
       const handler = (_: Electron.IpcRendererEvent, state: { state: string; appName: string }) =>
         callback(state)

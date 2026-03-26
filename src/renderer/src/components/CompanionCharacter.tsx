@@ -1,4 +1,5 @@
 import React from 'react'
+import SessionProgressRing from './SessionProgressRing'
 
 export type AnimationState = 'idle' | 'happy' | 'thinking' | 'concerned' | 'celebrating' | 'sleeping'
 
@@ -8,6 +9,8 @@ interface Props {
   onClick: () => void
   onMouseEnter: () => void
   onMouseLeave: () => void
+  sessionMinutes?: number
+  activityState?: string
 }
 
 const animationClass: Record<AnimationState, string> = {
@@ -33,31 +36,40 @@ export default function CompanionCharacter({
   isPanelOpen,
   onClick,
   onMouseEnter,
-  onMouseLeave
+  onMouseLeave,
+  sessionMinutes = 0,
+  activityState = 'BROWSING'
 }: Props): React.ReactElement {
   const isSleeping = animationState === 'sleeping'
 
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      className={`
-        relative flex items-center justify-center
-        w-24 h-24 rounded-full cursor-pointer
-        bg-gradient-to-br from-violet-500 to-indigo-600
-        shadow-lg shadow-violet-500/40
-        border-2 transition-all duration-300
-        focus:outline-none
-        ${isPanelOpen
-          ? 'border-violet-300/60 shadow-violet-400/60 w-16 h-16'
-          : 'border-transparent hover:border-violet-300/40 hover:shadow-violet-500/50'}
-        ${animationClass[animationState]}
-      `}
-      aria-label="Open Lumina companion panel"
-    >
-      {/* Glow ring */}
-      <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-sm" />
+    <div className="relative">
+      {/* Session Progress Ring */}
+      <SessionProgressRing
+        sessionMinutes={sessionMinutes}
+        activityState={activityState}
+      />
+
+      <button
+        onClick={onClick}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
+        className={`
+          relative flex items-center justify-center
+          w-24 h-24 rounded-full cursor-pointer
+          bg-gradient-to-br from-violet-500 to-indigo-600
+          shadow-lg shadow-violet-500/40
+          border-2 transition-all duration-300
+          focus:outline-none
+          ${isPanelOpen
+            ? 'border-violet-300/60 shadow-violet-400/60 w-16 h-16'
+            : 'border-transparent hover:border-violet-300/40 hover:shadow-violet-500/50'}
+          ${animationClass[animationState]}
+        `}
+        aria-label="Open Lumina companion panel"
+      >
+        {/* Glow ring */}
+        <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-sm" />
 
       {/* Face */}
       <div className="relative flex flex-col items-center gap-1">
@@ -108,14 +120,15 @@ export default function CompanionCharacter({
         `} />
       </div>
 
-      {/* Thinking dots overlay */}
-      {animationState === 'thinking' && (
-        <div className="absolute -top-1 -right-1 flex gap-0.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:0ms]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:150ms]" />
-          <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:300ms]" />
-        </div>
-      )}
-    </button>
+        {/* Thinking dots overlay */}
+        {animationState === 'thinking' && (
+          <div className="absolute -top-1 -right-1 flex gap-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:0ms]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:150ms]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:300ms]" />
+          </div>
+        )}
+      </button>
+    </div>
   )
 }

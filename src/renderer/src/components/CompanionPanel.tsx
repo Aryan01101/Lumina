@@ -13,11 +13,12 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import MoodCheck from './MoodCheck'
 import CCMProposals from './CCMProposals'
 import ToolResult from './ToolResult'
+import FocusTab from './FocusTab'
 import type { CCMProposal } from '../../../main/ccm'
 import { formatGroundednessScore } from '../utils/format'
 
 interface ToolResultData {
-  tool: 'calculator' | 'alarm' | 'timer' | 'schedule'
+  tool: 'calculator' | 'alarm' | 'timer' | 'schedule' | 'add_todo' | 'complete_todo' | 'list_todos'
   success: boolean
   data?: unknown
   message?: string
@@ -37,7 +38,7 @@ interface Props {
   onClose: () => void
 }
 
-type Tab = 'chat' | 'journal' | 'mood'
+type Tab = 'chat' | 'journal' | 'mood' | 'focus'
 
 const AUTO_CLOSE_DELAY_MS = 60_000
 
@@ -283,7 +284,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
           <span className="text-white/90 text-sm font-medium">Lumina</span>
         </div>
         <div className="flex gap-1">
-          {(['chat', 'journal', 'mood'] as Tab[]).map(tab => (
+          {(['chat', 'focus', 'journal', 'mood'] as Tab[]).map(tab => (
             <button
               key={tab}
               onClick={() => { setActiveTab(tab); resetTimer() }}
@@ -430,6 +431,10 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
           <div className="flex-1 px-4 py-3 flex items-center">
             <MoodCheck lastLoggedAt={lastMoodLoggedAt} onLog={handleLogMood} />
           </div>
+        )}
+
+        {activeTab === 'focus' && (
+          <FocusTab resetTimer={resetTimer} />
         )}
       </div>
 

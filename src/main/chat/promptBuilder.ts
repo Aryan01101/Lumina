@@ -17,6 +17,7 @@ export interface PromptContext {
   activityAppName: string
   history: ConversationTurn[]
   toolContext?: string
+  todoContext?: string
 }
 
 export interface BuiltPrompt {
@@ -49,7 +50,8 @@ export function buildSystemPrompt(
   retrievedChunks: string[],
   activityState: string,
   activityAppName: string,
-  toolContext?: string
+  toolContext?: string,
+  todoContext?: string
 ): string {
   const parts: string[] = []
 
@@ -59,6 +61,10 @@ export function buildSystemPrompt(
 
   if (toolContext) {
     parts.push(`\n${toolContext}`)
+  }
+
+  if (todoContext) {
+    parts.push(`\n${todoContext}`)
   }
 
   if (ccmSummary) {
@@ -106,7 +112,8 @@ export function buildPrompt(context: PromptContext, userMessage: string): BuiltP
       context.retrievedChunks,
       context.activityState,
       context.activityAppName,
-      context.toolContext
+      context.toolContext,
+      context.todoContext
     ),
     conversationText: buildConversationPrompt(context.history, userMessage)
   }

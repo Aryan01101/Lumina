@@ -11,7 +11,18 @@ import {
 import { handleChatMessage } from '../chat'
 import { getSettings, setSetting, type AppSettings } from '../settings'
 import { isOllamaAvailable } from '../systemState'
-import { isDegradedMode } from '../activity'
+import { isDegradedMode, getCurrentActivity } from '../activity'
+import { getCurrentSession, getCurrentSessionMinutes } from '../activity/sessions'
+import {
+  createTodo,
+  listTodos,
+  getTodo,
+  completeTodo,
+  uncompleteTodo,
+  updateTodo,
+  deleteTodo,
+  getTodoStats
+} from '../todos'
 
 /**
  * Registers all IPC handlers for the main process.
@@ -119,6 +130,106 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     `).run(payload.value, scoreMap[payload.value] ?? 0.5)
 
     return { id: result.lastInsertRowid }
+  })
+
+  // ─── Todos ────────────────────────────────────────────────────────────────
+
+  ipcMain.handle('todos:create', async (_event, payload: {
+    content: string
+    priority?: number
+    dueDate?: string
+    aiSuggested?: boolean
+  }) => {
+    try {
+      const db = getDb()
+      const id = createTodo(db, payload.content, {
+        priority: payload.priority,
+        dueDate: payload.dueDate,
+        aiSuggested: payload.aiSuggested
+      })
+      return { ok: true, id }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle('todos:list', async (_event, payload?: { status?: 'pending' | 'completed' }) => {
+    try {
+      const db = getDb()
+      const todos = listTodos(db, payload?.status)
+      return { ok: true, todos }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message, todos: [] }
+    }
+  })
+
+  ipcMain.handle('todos:get', async (_event, payload: { id: number }) => {
+    try {
+      const db = getDb()
+      const todo = getTodo(db, payload.id)
+      return { ok: true, todo }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message, todo: null }
+    }
+  })
+
+  ipcMain.handle('todos:complete', async (_event, payload: { id: number }) => {
+    try {
+      const db = getDb()
+      const success = completeTodo(db, payload.id)
+      return { ok: success }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle('todos:uncomplete', async (_event, payload: { id: number }) => {
+    try {
+      const db = getDb()
+      const success = uncompleteTodo(db, payload.id)
+      return { ok: success }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle('todos:update', async (_event, payload: {
+    id: number
+    content?: string
+    priority?: number
+    dueDate?: string | null
+  }) => {
+    try {
+      const db = getDb()
+      const success = updateTodo(db, payload.id, {
+        content: payload.content,
+        priority: payload.priority,
+        dueDate: payload.dueDate
+      })
+      return { ok: success }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle('todos:delete', async (_event, payload: { id: number }) => {
+    try {
+      const db = getDb()
+      const success = deleteTodo(db, payload.id)
+      return { ok: success }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  })
+
+  ipcMain.handle('todos:stats', async () => {
+    try {
+      const db = getDb()
+      const stats = getTodoStats(db)
+      return { ok: true, stats }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message, stats: { pending: 0, completed: 0, total: 0 } }
+    }
   })
 
   // ─── Memory ───────────────────────────────────────────────────────────────
@@ -244,6 +355,16 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('system:retry-embeddings', async () => {
     await retryPendingEmbeddings()
     return { ollamaOk: isOllamaAvailable() }
+  })
+
+  ipcMain.handle('activity:getCurrentSession', () => {
+    const activity = getCurrentActivity()
+    const sessionMinutes = getCurrentSessionMinutes()
+    return {
+      activityState: activity.state,
+      appName: activity.appName,
+      sessionMinutes
+    }
   })
 
   ipcMain.handle('shell:open-url', async (_event, url: string) => {

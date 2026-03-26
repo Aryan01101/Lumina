@@ -23,6 +23,7 @@ import { streamGenerate } from './ollamaClient'
 import { scoreGroundedness } from './grounder'
 import { routeTools, formatToolResultForContext, type ToolResult } from '../tools/router'
 import { createAlarm } from '../tools/alarms'
+import { listTodos, getTodoStats } from '../todos'
 
 const DEFAULT_MODEL   = 'llama3.1:8b'
 const MAX_HISTORY_MSG = 8   // last 4 turns
@@ -179,6 +180,21 @@ export async function handleChatMessage(
   const activityState = activity?.state ?? 'UNKNOWN'
   const activityApp   = activity?.appName ?? 'unknown'
 
+  // 4.5. Generate todo context
+  let todoContext = ''
+  try {
+    const stats = getTodoStats(db)
+    if (stats.pending > 0) {
+      const todos = listTodos(db, 'pending')
+      const todoList = todos.slice(0, 5).map((t, i) => `${i + 1}. ${t.content}${t.aiSuggested ? ' (AI suggested)' : ''}`).join('\n')
+      todoContext = `[Current Tasks]\nYou have ${stats.pending} pending task${stats.pending === 1 ? '' : 's'}:\n${todoList}${todos.length > 5 ? `\n... and ${todos.length - 5} more` : ''}`
+    } else {
+      todoContext = '[Current Tasks]\nNo pending tasks'
+    }
+  } catch (err) {
+    console.error('[Chat] Failed to generate todo context:', err)
+  }
+
   // 5. Build prompt
   const { system, conversationText } = buildPrompt(
     {
@@ -187,7 +203,8 @@ export async function handleChatMessage(
       activityState,
       activityAppName: activityApp,
       history,
-      toolContext
+      toolContext,
+      todoContext
     },
     content
   )

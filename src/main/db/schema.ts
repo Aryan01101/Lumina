@@ -130,6 +130,27 @@ export const CREATE_TABLES = `
     duration_ms      INTEGER,
     created_at       TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS alarms (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    type           TEXT NOT NULL CHECK(type IN ('alarm','timer')),
+    trigger_at     TEXT NOT NULL,
+    message        TEXT,
+    fired_at       TEXT,
+    dismissed_at   TEXT,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS todos (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    content        TEXT NOT NULL,
+    status         TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','completed')),
+    priority       INTEGER NOT NULL DEFAULT 0 CHECK(priority BETWEEN 0 AND 2),
+    due_date       TEXT,
+    ai_suggested   INTEGER NOT NULL DEFAULT 0,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at   TEXT
+  );
 `
 
 export const CREATE_INDEXES = `
@@ -137,23 +158,12 @@ export const CREATE_INDEXES = `
   CREATE INDEX IF NOT EXISTS idx_mood_logs_created_at ON mood_logs(created_at);
   CREATE INDEX IF NOT EXISTS idx_activity_sessions_started_at ON activity_sessions(started_at);
   CREATE INDEX IF NOT EXISTS idx_messages_conversation_created ON messages(conversation_id, created_at);
-
-  -- Alarms & Timers
-  CREATE TABLE IF NOT EXISTS alarms (
-    id             INTEGER PRIMARY KEY AUTOINCREMENT,
-    type           TEXT NOT NULL CHECK(type IN ('alarm','timer')),
-    trigger_at     TEXT NOT NULL,  -- ISO timestamp when alarm should fire
-    message        TEXT,
-    fired_at       TEXT,
-    dismissed_at   TEXT,
-    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
-  );
-
   CREATE INDEX IF NOT EXISTS idx_alarms_trigger ON alarms(trigger_at) WHERE fired_at IS NULL AND dismissed_at IS NULL;
   CREATE INDEX IF NOT EXISTS idx_memory_chunks_source ON memory_chunks(source_type, source_id);
   CREATE INDEX IF NOT EXISTS idx_memory_chunks_importance ON memory_chunks(importance_score DESC);
   CREATE INDEX IF NOT EXISTS idx_ccm_proposals_status ON ccm_proposals(status);
   CREATE INDEX IF NOT EXISTS idx_agent_events_created_at ON agent_events(created_at);
+  CREATE INDEX IF NOT EXISTS idx_todos_status ON todos(status, created_at);
 `
 
 export const CREATE_FTS5 = `

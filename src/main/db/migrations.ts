@@ -7,7 +7,7 @@ import {
   CREATE_SCHEMA_VERSION
 } from './schema'
 
-const CURRENT_VERSION = 1
+const CURRENT_VERSION = 3
 
 export function runMigrations(db: Database.Database, vecAvailable: boolean): void {
   db.exec(CREATE_SCHEMA_VERSION)
@@ -48,6 +48,45 @@ export function runMigrations(db: Database.Database, vecAvailable: boolean): voi
       `).run()
 
       db.prepare('INSERT INTO schema_version (version) VALUES (1)').run()
+    }
+
+    // v1 → v2: add alarms table (for users who have v1 but table was misplaced in schema)
+    if (currentVersion < 2) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS alarms (
+          id             INTEGER PRIMARY KEY AUTOINCREMENT,
+          type           TEXT NOT NULL CHECK(type IN ('alarm','timer')),
+          trigger_at     TEXT NOT NULL,
+          message        TEXT,
+          fired_at       TEXT,
+          dismissed_at   TEXT,
+          created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_alarms_trigger ON alarms(trigger_at) WHERE fired_at IS NULL AND dismissed_at IS NULL;
+      `)
+
+      db.prepare('INSERT INTO schema_version (version) VALUES (2)').run()
+    }
+
+    // v2 → v3: add todos table for productivity features
+    if (currentVersion < 3) {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS todos (
+          id             INTEGER PRIMARY KEY AUTOINCREMENT,
+          content        TEXT NOT NULL,
+          status         TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','completed')),
+          priority       INTEGER NOT NULL DEFAULT 0 CHECK(priority BETWEEN 0 AND 2),
+          due_date       TEXT,
+          ai_suggested   INTEGER NOT NULL DEFAULT 0,
+          created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+          completed_at   TEXT
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_todos_status ON todos(status, created_at);
+      `)
+
+      db.prepare('INSERT INTO schema_version (version) VALUES (3)').run()
     }
   })()
 
