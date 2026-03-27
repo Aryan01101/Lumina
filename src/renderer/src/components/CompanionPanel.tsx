@@ -56,6 +56,9 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
   const scrollRef = useRef<HTMLDivElement>(null)
   const autoCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onCloseRef = useRef(onClose)
+  const chatInputRef = useRef<HTMLInputElement>(null)
+  const journalTextareaRef = useRef<HTMLTextAreaElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
   onCloseRef.current = onClose
 
   // ─── Load conversation history ───────────────────────────────────────────────
@@ -133,6 +136,68 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
     }
     return () => { if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current) }
   }, [isOpen, resetTimer])
+
+  // ─── Focus Management ────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    // Small delay to ensure DOM is ready
+    const focusTimer = setTimeout(() => {
+      if (activeTab === 'chat' && chatInputRef.current) {
+        chatInputRef.current.focus()
+      } else if (activeTab === 'journal' && journalTextareaRef.current) {
+        journalTextareaRef.current.focus()
+      } else if (activeTab === 'focus') {
+        // Focus the todo input in FocusTab
+        const focusInput = document.querySelector<HTMLInputElement>('[data-testid="focus-todo-input"]')
+        if (focusInput) focusInput.focus()
+      }
+    }, 50)
+
+    return () => clearTimeout(focusTimer)
+  }, [isOpen, activeTab])
+
+  // ─── Keyboard Navigation ─────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Close on Escape
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClose()
+        return
+      }
+
+      // Focus trap: keep focus within panel
+      if (e.key === 'Tab' && panelRef.current) {
+        const focusableElements = panelRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+        const firstElement = focusableElements[0]
+        const lastElement = focusableElements[focusableElements.length - 1]
+
+        if (e.shiftKey) {
+          // Shift+Tab: moving backwards
+          if (document.activeElement === firstElement) {
+            e.preventDefault()
+            lastElement?.focus()
+          }
+        } else {
+          // Tab: moving forwards
+          if (document.activeElement === lastElement) {
+            e.preventDefault()
+            firstElement?.focus()
+          }
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
 
   // ─── Scroll to bottom ────────────────────────────────────────────────────────
 
@@ -266,6 +331,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
 
   return (
     <div
+      ref={panelRef}
       data-testid="companion-panel"
       className="flex flex-col w-[320px] rounded-2xl overflow-hidden animate-slide-up"
       style={{
@@ -367,6 +433,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
             <div className="px-4 py-3 border-t border-white/5">
               <div className="flex gap-2 items-end">
                 <input
+                  ref={chatInputRef}
                   type="text"
                   value={input}
                   onChange={e => { setInput(e.target.value); resetTimer() }}
@@ -408,6 +475,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
             <div className="flex-1 px-4 py-3 flex flex-col gap-3">
               <p className="text-white/40 text-xs">Write freely — no form, no labels.</p>
               <textarea
+                ref={journalTextareaRef}
                 value={journalText}
                 onChange={e => { setJournalText(e.target.value); resetTimer() }}
                 placeholder="What's on your mind?"
