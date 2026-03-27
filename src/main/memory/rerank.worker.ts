@@ -66,11 +66,8 @@ async function main(): Promise<void> {
       }
 
       // Score each [query, candidate] pair
-      // Use object format {text, text_pair} for cross-encoder models
-      const pairs = candidates.map((candidate) => ({
-        text: query,
-        text_pair: candidate
-      }))
+      // text-classification pipeline expects arrays, not objects
+      const pairs = candidates.map((candidate) => [query, candidate])
       const results = await model(pairs, { topk: null })
 
       // Extract the relevance score from each result
