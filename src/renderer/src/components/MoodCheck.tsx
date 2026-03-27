@@ -32,7 +32,7 @@ export default function MoodCheck({ lastLoggedAt, onLog }: Props): React.ReactEl
 
   if (justLogged) {
     return (
-      <div className="flex flex-col items-center gap-2 py-4">
+      <div className="flex flex-col items-center gap-2 py-4" role="status" aria-live="polite">
         <span className="text-2xl">✓</span>
         <p className="text-white/60 text-xs">Logged. Thanks!</p>
       </div>
@@ -49,6 +49,7 @@ export default function MoodCheck({ lastLoggedAt, onLog }: Props): React.ReactEl
             onClick={() => handleLog(value)}
             disabled={!canLog || loading}
             title={label}
+            aria-label={`Log mood as ${label}`}
             className={`
               flex flex-col items-center gap-1 p-2 rounded-xl
               transition-all duration-150
@@ -64,7 +65,7 @@ export default function MoodCheck({ lastLoggedAt, onLog }: Props): React.ReactEl
         ))}
       </div>
       {!canLog && lastLoggedAt && (
-        <p className="text-white/30 text-[10px] text-center">
+        <p className="text-white/35 text-[10px] text-center">
           Available again in ~{Math.ceil((4 - (Date.now() - new Date(lastLoggedAt).getTime()) / 3_600_000))}h
         </p>
       )}
