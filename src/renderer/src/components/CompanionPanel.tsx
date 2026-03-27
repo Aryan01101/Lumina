@@ -330,7 +330,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
   if (!isOpen) return null
 
   return (
-    <div
+    <aside
       ref={panelRef}
       data-testid="companion-panel"
       className="flex flex-col w-[320px] rounded-2xl overflow-hidden animate-slide-up"
@@ -343,6 +343,8 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
       }}
       onMouseMove={resetTimer}
       onKeyDown={resetTimer}
+      role="complementary"
+      aria-label="Lumina companion panel"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
@@ -350,7 +352,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
           <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
           <span className="text-white/90 text-sm font-medium">Lumina</span>
         </div>
-        <div className="flex gap-1" data-testid="companion-tabs">
+        <nav className="flex gap-1" data-testid="companion-tabs" role="navigation" aria-label="Panel tabs">
           {(['chat', 'focus', 'journal', 'mood'] as Tab[]).map(tab => (
             <button
               key={tab}
@@ -367,7 +369,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
               {tab}
             </button>
           ))}
-        </div>
+        </nav>
         <button
           onClick={onClose}
           className="text-white/35 hover:text-white/70 transition-colors text-lg leading-none"
@@ -381,7 +383,11 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
         {activeTab === 'chat' && (
           <>
             {!ollamaOk && (
-              <div className="mx-3 mt-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300/80 text-[11px] leading-relaxed">
+              <div
+                className="mx-3 mt-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300/80 text-[11px] leading-relaxed"
+                role="status"
+                aria-live="polite"
+              >
                 AI models are loading — responses will be available shortly.
               </div>
             )}
@@ -389,6 +395,9 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
               ref={scrollRef}
               className="flex-1 overflow-y-auto px-4 py-3 space-y-3 lumina-scroll"
               data-testid="companion-chat-messages"
+              role="log"
+              aria-live="polite"
+              aria-label="Chat conversation"
             >
               {isLoadingHistory && (
                 <div className="flex items-center justify-center py-8 text-white/35 text-xs">
@@ -431,7 +440,12 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
               ))}
             </div>
             <div className="px-4 py-3 border-t border-white/5">
-              <div className="flex gap-2 items-end">
+              <form
+                className="flex gap-2 items-end"
+                onSubmit={(e) => { e.preventDefault(); handleSendChat() }}
+                role="search"
+                aria-label="Send message"
+              >
                 <input
                   ref={chatInputRef}
                   type="text"
@@ -449,6 +463,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                     focus:outline-none focus:border-violet-400/50 focus:bg-[rgba(255,255,255,0.09)]
                     disabled:opacity-50 transition-colors
                   "
+                  aria-label="Message input"
                 />
                 <button
                   onClick={handleSendChat}
@@ -465,7 +480,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 </button>
-              </div>
+              </form>
             </div>
           </>
         )}
@@ -473,7 +488,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
         {activeTab === 'journal' && (
           <>
             <div className="flex-1 px-4 py-3 flex flex-col gap-3">
-              <p className="text-white/40 text-xs">Write freely — no form, no labels.</p>
+              <p className="text-white/40 text-xs" id="journal-description">Write freely — no form, no labels.</p>
               <textarea
                 ref={journalTextareaRef}
                 value={journalText}
@@ -486,6 +501,8 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                   focus:outline-none focus:border-violet-400/50
                   resize-none transition-colors lumina-scroll
                 "
+                aria-label="Journal entry"
+                aria-describedby="journal-description"
               />
             </div>
             <div className="px-4 py-3 border-t border-white/5">
@@ -518,8 +535,10 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
 
       {/* CCM Proposals */}
       {proposals.length > 0 && (
-        <CCMProposals proposals={proposals} onResolve={handleResolveProposal} />
+        <section role="region" aria-label="Pending proposals">
+          <CCMProposals proposals={proposals} onResolve={handleResolveProposal} />
+        </section>
       )}
-    </div>
+    </aside>
   )
 }

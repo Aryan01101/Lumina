@@ -111,7 +111,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
   const displayTodos = showCompleted ? todos : pendingTodos
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden" data-testid="focus-tab">
+    <article className="flex-1 flex flex-col overflow-hidden" data-testid="focus-tab" role="region" aria-label="Focus and productivity">
       {/* Session Tracker */}
       <div className="px-4 pt-3 pb-2" data-testid="focus-session-tracker">
         <div className="bg-white/5 rounded-xl px-3 py-2 border border-white/10">
@@ -143,15 +143,22 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
         <button
           onClick={() => setShowCompleted(!showCompleted)}
           className="text-xs text-violet-400 hover:text-violet-300 transition-colors"
+          aria-label={showCompleted ? 'Hide completed tasks' : 'Show completed tasks'}
+          aria-expanded={showCompleted}
         >
           {showCompleted ? 'Hide' : 'Show'} completed
         </button>
       </div>
 
       {/* Todo List */}
-      <div className="flex-1 overflow-y-auto px-4 space-y-2 lumina-scroll" data-testid="focus-todo-list">
+      <div
+        className="flex-1 overflow-y-auto px-4 space-y-2 lumina-scroll"
+        data-testid="focus-todo-list"
+        role="list"
+        aria-label="Todo items"
+      >
         {displayTodos.length === 0 && (
-          <div className="py-8 text-center text-white/35 text-xs" data-testid="focus-empty-state">
+          <div className="py-8 text-center text-white/35 text-xs" data-testid="focus-empty-state" role="listitem">
             {showCompleted ? 'No todos yet' : 'No pending tasks'}
           </div>
         )}
@@ -164,6 +171,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
               transition-all hover:bg-white/10
               ${todo.status === 'completed' ? 'opacity-50' : ''}
             `}
+            role="listitem"
           >
             <button
               onClick={() => handleToggleComplete(todo)}
@@ -220,16 +228,21 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
 
       {/* Add Todo Input */}
       <div className="px-4 py-3 border-t border-white/5" data-testid="focus-add-todo-section">
-        <div className="flex gap-2 items-start">
+        <form
+          className="flex gap-2 items-start"
+          onSubmit={(e) => { e.preventDefault(); handleAddTodo() }}
+          aria-label="Add new todo"
+        >
           <input
             type="text"
             value={newTodoText}
             onChange={e => { setNewTodoText(e.target.value); resetTimer() }}
             onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
+              if (e.key === 'Enter' && e.shiftKey) {
+                // Shift+Enter: prevent form submission (for future multi-line support)
                 e.preventDefault()
-                handleAddTodo()
               }
+              // Regular Enter: allow form submission
             }}
             placeholder="Add a task..."
             data-testid="focus-todo-input"
@@ -239,8 +252,9 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
               focus:outline-none focus:border-violet-400/50
               transition-colors
             "
+            aria-label="New task input"
           />
-          <div className="flex gap-1" data-testid="focus-priority-buttons">
+          <div className="flex gap-1" data-testid="focus-priority-buttons" role="group" aria-label="Task priority">
             {[0, 1, 2].map(priority => (
               <button
                 key={priority}
@@ -287,8 +301,8 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
           </button>
-        </div>
+        </form>
       </div>
-    </div>
+    </article>
   )
 }
