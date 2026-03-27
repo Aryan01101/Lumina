@@ -80,16 +80,32 @@ async function main(): Promise<void> {
       }
 
       // Score each [query, candidate] pair
-      // text-classification pipeline expects arrays, not objects
-      const pairs = candidates.map((candidate) => [query, candidate])
-      console.log('[Reranker] Debug - pairs count:', pairs.length, 'first pair types:', typeof pairs[0][0], typeof pairs[0][1])
+      // transformers.js text-classification requires object format for sentence pairs
+      const inputs = candidates.map((candidate) => ({
+        text: query,
+        text_pair: candidate
+      }))
+      console.log('[Reranker] Debug - inputs count:', inputs.length, 'first input format:', JSON.stringify(inputs[0], null, 2).slice(0, 150))
 
       let results
       try {
-        results = await model(pairs, { topk: null })
+        results = await model(inputs)
       } catch (modelErr) {
-        console.error('[Reranker] Model call failed with pairs:', JSON.stringify(pairs.slice(0, 2), null, 2))
-        throw modelErr
+        console.error('[Reranker] Model call failed. Trying sequential processing...')
+        console.error('[Reranker] Batch error:', modelErr)
+
+        // Fallback: process one pair at a time
+        try {
+          results = []
+          for (let i = 0; i < candidates.length; i++) {
+            const result = await model({ text: query, text_pair: candidates[i] })
+            results.push(result[0]) // Take first result from single-item array
+            console.log(`[Reranker] Processed ${i + 1}/${candidates.length}`)
+          }
+        } catch (seqErr) {
+          console.error('[Reranker] Sequential processing also failed:', seqErr)
+          throw seqErr
+        }
       }
 
       // Extract the relevance score from each result
