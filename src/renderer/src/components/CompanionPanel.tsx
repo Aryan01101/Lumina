@@ -370,7 +370,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
         </div>
         <button
           onClick={onClose}
-          className="text-white/30 hover:text-white/70 transition-colors text-lg leading-none"
+          className="text-white/35 hover:text-white/70 transition-colors text-lg leading-none"
           aria-label="Close panel"
           data-testid="companion-close-button"
         >×</button>
@@ -391,7 +391,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
               data-testid="companion-chat-messages"
             >
               {isLoadingHistory && (
-                <div className="flex items-center justify-center py-8 text-white/30 text-xs">
+                <div className="flex items-center justify-center py-8 text-white/35 text-xs">
                   <span>Loading conversation...</span>
                 </div>
               )}
@@ -445,7 +445,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                   data-testid="companion-chat-input"
                   className="
                     flex-1 bg-[rgba(255,255,255,0.06)] border border-white/10 rounded-xl
-                    px-3 py-2 text-sm text-white/90 placeholder-white/30
+                    px-3 py-2 text-sm text-white/90 placeholder-white/35
                     focus:outline-none focus:border-violet-400/50 focus:bg-[rgba(255,255,255,0.09)]
                     disabled:opacity-50 transition-colors
                   "
@@ -482,7 +482,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                 data-testid="companion-journal-textarea"
                 className="
                   flex-1 bg-white/5 border border-white/10 rounded-xl
-                  px-3 py-2.5 text-sm text-white placeholder-white/20
+                  px-3 py-2.5 text-sm text-white placeholder-white/35
                   focus:outline-none focus:border-violet-400/50
                   resize-none transition-colors lumina-scroll
                 "

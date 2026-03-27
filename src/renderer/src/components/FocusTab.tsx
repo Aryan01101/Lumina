@@ -23,7 +23,7 @@ interface Props {
   resetTimer: () => void
 }
 
-const PRIORITY_COLORS = ['text-white/40', 'text-yellow-400', 'text-red-400']
+const PRIORITY_COLORS = ['text-white/50', 'text-yellow-400', 'text-red-400']
 const PRIORITY_LABELS = ['Low', 'Med', 'High']
 
 export default function FocusTab({ resetTimer }: Props): React.ReactElement {
@@ -124,7 +124,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
               {Math.floor(sessionMinutes)}m
             </span>
           </div>
-          <div className="mt-1 text-[10px] text-white/40">
+          <div className="mt-1 text-[10px] text-white/50">
             {currentActivity}
           </div>
         </div>
@@ -135,7 +135,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
         <h3 className="text-sm font-medium text-white/80">
           Tasks
           {pendingTodos.length > 0 && (
-            <span className="ml-2 text-xs text-white/40">
+            <span className="ml-2 text-xs text-white/50">
               {pendingTodos.length} pending
             </span>
           )}
@@ -151,7 +151,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
       {/* Todo List */}
       <div className="flex-1 overflow-y-auto px-4 space-y-2 lumina-scroll" data-testid="focus-todo-list">
         {displayTodos.length === 0 && (
-          <div className="py-8 text-center text-white/30 text-xs" data-testid="focus-empty-state">
+          <div className="py-8 text-center text-white/35 text-xs" data-testid="focus-empty-state">
             {showCompleted ? 'No todos yet' : 'No pending tasks'}
           </div>
         )}
@@ -205,7 +205,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
               )}
               <button
                 onClick={() => handleDeleteTodo(todo.id)}
-                className="p-1 text-white/20 hover:text-red-400 transition-colors"
+                className="p-1 text-white/40 hover:text-red-400 transition-colors"
                 aria-label="Delete todo"
                 data-testid={`focus-todo-delete-${todo.id}`}
               >
@@ -235,7 +235,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
             data-testid="focus-todo-input"
             className="
               flex-1 bg-white/5 border border-white/10 rounded-lg
-              px-2.5 py-2 text-sm text-white/90 placeholder-white/30
+              px-2.5 py-2 text-sm text-white/90 placeholder-white/35
               focus:outline-none focus:border-violet-400/50
               transition-colors
             "
@@ -258,7 +258,7 @@ export default function FocusTab({ resetTimer }: Props): React.ReactElement {
                   transition-all
                   ${newTodoPriority === priority
                     ? 'bg-violet-500/30 border-violet-400 text-violet-200'
-                    : 'bg-white/5 border-white/10 text-white/30 hover:text-white/50'
+                    : 'bg-white/5 border-white/10 text-white/35 hover:text-white/50'
                   }
                   border
                 `}
