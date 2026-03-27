@@ -14,7 +14,18 @@ export default defineConfig({
 
   // Expect timeout for assertions
   expect: {
-    timeout: 10_000
+    timeout: 10_000,
+    // Visual regression settings
+    toHaveScreenshot: {
+      // Maximum allowed pixel difference (0.1 = 10%)
+      maxDiffPixelRatio: 0.01,
+      // Threshold for considering pixels different (0-1)
+      threshold: 0.2,
+      // Animation settings
+      animations: 'disabled',
+      // Caret (text cursor) settings
+      caret: 'hide'
+    }
   },
 
   // Run tests in parallel

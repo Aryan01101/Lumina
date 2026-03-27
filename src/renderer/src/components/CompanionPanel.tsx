@@ -266,6 +266,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
 
   return (
     <div
+      data-testid="companion-panel"
       className="flex flex-col w-[320px] rounded-2xl overflow-hidden animate-slide-up"
       style={{
         height: proposals.length > 0 ? '460px' : '400px',
@@ -283,7 +284,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
           <div className="w-2 h-2 rounded-full bg-violet-400 animate-pulse" />
           <span className="text-white/90 text-sm font-medium">Lumina</span>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1" data-testid="companion-tabs">
           {(['chat', 'focus', 'journal', 'mood'] as Tab[]).map(tab => (
             <button
               key={tab}
@@ -293,6 +294,9 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                   ? 'bg-violet-500/30 text-violet-200'
                   : 'text-white/40 hover:text-white/70'
               }`}
+              data-testid={`companion-tab-${tab}`}
+              aria-label={`Switch to ${tab} tab`}
+              aria-current={activeTab === tab ? 'page' : undefined}
             >
               {tab}
             </button>
@@ -302,6 +306,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
           onClick={onClose}
           className="text-white/30 hover:text-white/70 transition-colors text-lg leading-none"
           aria-label="Close panel"
+          data-testid="companion-close-button"
         >×</button>
       </div>
 
@@ -317,6 +322,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
             <div
               ref={scrollRef}
               className="flex-1 overflow-y-auto px-4 py-3 space-y-3 lumina-scroll"
+              data-testid="companion-chat-messages"
             >
               {isLoadingHistory && (
                 <div className="flex items-center justify-center py-8 text-white/30 text-xs">
@@ -369,6 +375,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                   }}
                   disabled={isSending}
                   placeholder={isSending ? 'Thinking…' : 'Say something…'}
+                  data-testid="companion-chat-input"
                   className="
                     flex-1 bg-[rgba(255,255,255,0.06)] border border-white/10 rounded-xl
                     px-3 py-2 text-sm text-white/90 placeholder-white/30
@@ -385,6 +392,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                     flex items-center justify-center transition-all active:scale-95
                   "
                   aria-label="Send message"
+                  data-testid="companion-chat-send-button"
                 >
                   <svg className="w-4 h-4 text-white rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
@@ -403,6 +411,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                 value={journalText}
                 onChange={e => { setJournalText(e.target.value); resetTimer() }}
                 placeholder="What's on your mind?"
+                data-testid="companion-journal-textarea"
                 className="
                   flex-1 bg-white/5 border border-white/10 rounded-xl
                   px-3 py-2.5 text-sm text-white placeholder-white/20
@@ -420,6 +429,7 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
                   disabled:opacity-30 disabled:cursor-not-allowed
                   text-white text-sm font-medium transition-all active:scale-[0.98]
                 "
+                data-testid="companion-journal-save-button"
               >
                 Save Entry
               </button>
