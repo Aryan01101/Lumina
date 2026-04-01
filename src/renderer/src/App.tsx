@@ -36,21 +36,28 @@ export default function App(): React.ReactElement {
   const [isCornerHover, setIsCornerHover]   = useState(false)
   const [sessionMinutes, setSessionMinutes] = useState(0)
   const [activityState, setActivityState]   = useState('BROWSING')
+  const [activityMonitorEnabled, setActivityMonitorEnabled] = useState(true)
 
   useEffect(() => {
     window.lumina.settings.get().then(({ settings }) => {
-      const s = settings as { onboardingComplete?: boolean }
+      const s = settings as { onboardingComplete?: boolean; activityMonitorEnabled?: boolean }
       if (!s.onboardingComplete) setShowOnboarding(true)
+      setActivityMonitorEnabled(s.activityMonitorEnabled ?? true)
     })
   }, [])
 
-  // Poll session info every 10 seconds
+  // Poll session info and settings every 10 seconds
   useEffect(() => {
     const updateSessionInfo = async () => {
       try {
         const info = await window.lumina.activity.getCurrentSession()
         setSessionMinutes(info.sessionMinutes)
         setActivityState(info.activityState)
+
+        // Also poll for settings changes (including monitor toggle)
+        const { settings } = await window.lumina.settings.get()
+        const s = settings as { activityMonitorEnabled?: boolean }
+        setActivityMonitorEnabled(s.activityMonitorEnabled ?? true)
       } catch (err) {
         console.error('[App] Failed to get session info:', err)
       }
@@ -97,7 +104,17 @@ export default function App(): React.ReactElement {
   }, [isSettingsOpen])
 
   const handleClosePanel    = useCallback(() => setIsPanelOpen(false), [])
-  const handleCloseSettings = useCallback(() => setIsSettingsOpen(false), [])
+  const handleCloseSettings = useCallback(async () => {
+    setIsSettingsOpen(false)
+    // Immediately refresh settings to update monitor state and close/open eyes
+    try {
+      const { settings } = await window.lumina.settings.get()
+      const s = settings as { activityMonitorEnabled?: boolean }
+      setActivityMonitorEnabled(s.activityMonitorEnabled ?? true)
+    } catch (err) {
+      console.error('[App] Failed to refresh settings:', err)
+    }
+  }, [])
   const handleMinimize      = useCallback(() => {
     setIsMinimized(true)
     setIsPanelOpen(false)
@@ -111,6 +128,9 @@ export default function App(): React.ReactElement {
 
   useEffect(() => {
     const off = window.lumina.activity.onStateChange(({ state }) => {
+      // Don't update animation if monitor is disabled - keep eyes closed
+      if (!activityMonitorEnabled) return
+
       const hide = shouldAutoHide(state)
       setIsHidden(hide)
 
@@ -126,7 +146,25 @@ export default function App(): React.ReactElement {
       }
     })
     return off
-  }, [])
+  }, [activityMonitorEnabled])
+
+  // ─── Activity monitor toggle (close/open eyes) ────────────────────────────
+
+  useEffect(() => {
+    if (!activityMonitorEnabled) {
+      // Close eyes when monitor is disabled
+      setAnimationState('sleeping')
+      console.log('[App] Activity monitor disabled - closing eyes')
+    } else {
+      // Open eyes when monitor is re-enabled - set to appropriate state
+      if (isHidden || activityState === 'IDLE') {
+        setAnimationState('sleeping')
+      } else {
+        setAnimationState('idle')
+      }
+      console.log('[App] Activity monitor enabled - opening eyes')
+    }
+  }, [activityMonitorEnabled, isHidden, activityState])
 
   // ─── Agent messages ───────────────────────────────────────────────────────
 
