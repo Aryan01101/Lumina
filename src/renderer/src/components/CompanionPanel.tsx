@@ -202,10 +202,10 @@ export default function CompanionPanel({ isOpen, onClose }: Props): React.ReactE
   // ─── Scroll to bottom ────────────────────────────────────────────────────────
 
   useEffect(() => {
-    if (scrollRef.current) {
+    if (scrollRef.current && activeTab === 'chat') {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages])
+  }, [messages, activeTab])
 
   // ─── Streaming chat ──────────────────────────────────────────────────────────
 
