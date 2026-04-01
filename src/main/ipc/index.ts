@@ -23,6 +23,17 @@ import {
   deleteTodo,
   getTodoStats
 } from '../todos'
+import {
+  validateString,
+  validateEnum,
+  validateObject,
+  validatePositiveInteger,
+  validateNonNegativeInteger,
+  validateBoolean,
+  validateOptionalDate,
+  validateRecord,
+  combineValidationErrors
+} from './validators'
 
 /**
  * Registers all IPC handlers for the main process.
@@ -37,6 +48,21 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     mode: 'prompted' | 'freeform'
     guidingQuestion?: string
   }) => {
+    // Validate payload
+    const payloadError = validateObject(payload)
+    if (payloadError) return { error: payloadError }
+
+    const contentError = validateString(payload.content, 'content', { minLength: 10, maxLength: 50_000 })
+    if (contentError) return { error: contentError }
+
+    const modeError = validateEnum(payload.mode, 'mode', ['prompted', 'freeform'] as const)
+    if (modeError) return { error: modeError }
+
+    if (payload.guidingQuestion !== undefined) {
+      const questionError = validateString(payload.guidingQuestion, 'guidingQuestion', { minLength: 1, maxLength: 500 })
+      if (questionError) return { error: questionError }
+    }
+
     const db = getDb()
     const result = db.prepare(`
       INSERT INTO journal_entries (mode, content, guiding_question)
@@ -59,18 +85,28 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     content: string
     conversationId: string
   }) => {
-    if (typeof payload.content !== 'string' || payload.content.trim().length === 0) {
-      return { error: 'Empty message' }
-    }
-    const MAX_INPUT_CHARS = 4_000
-    if (payload.content.length > MAX_INPUT_CHARS) {
-      return { error: `Message too long (max ${MAX_INPUT_CHARS} characters)` }
-    }
+    // Validate payload
+    const payloadError = validateObject(payload)
+    if (payloadError) return { error: payloadError }
+
+    const contentError = validateString(payload.content, 'content', { minLength: 1, maxLength: 4_000 })
+    if (contentError) return { error: contentError }
+
+    const conversationIdError = validateString(payload.conversationId, 'conversationId', { maxLength: 100 })
+    if (conversationIdError) return { error: conversationIdError }
+
     return handleChatMessage(getDb(), mainWindow, payload)
   })
 
   ipcMain.handle('chat:getHistory', async (_event, payload: { conversationId: number }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { error: payloadError, messages: [] }
+
+      const idError = validatePositiveInteger(payload.conversationId, 'conversationId')
+      if (idError) return { error: idError, messages: [] }
+
       const db = getDb()
       const messages = db.prepare(`
         SELECT id, role, content, groundedness_score, created_at
@@ -117,6 +153,13 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   // ─── Mood ─────────────────────────────────────────────────────────────────
 
   ipcMain.handle('mood:log', async (_event, payload: { value: string }) => {
+    // Validate payload
+    const payloadError = validateObject(payload)
+    if (payloadError) return { error: payloadError }
+
+    const valueError = validateEnum(payload.value, 'value', ['frustrated', 'okay', 'good', 'amazing'] as const)
+    if (valueError) return { error: valueError }
+
     const scoreMap: Record<string, number> = {
       frustrated: 0.25,
       okay: 0.5,
@@ -141,6 +184,28 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     aiSuggested?: boolean
   }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const contentError = validateString(payload.content, 'content', { minLength: 1, maxLength: 500 })
+      if (contentError) return { ok: false, error: contentError }
+
+      if (payload.priority !== undefined) {
+        const priorityError = validateNonNegativeInteger(payload.priority, 'priority')
+        if (priorityError) return { ok: false, error: priorityError }
+      }
+
+      if (payload.dueDate !== undefined) {
+        const dueDateError = validateOptionalDate(payload.dueDate, 'dueDate')
+        if (dueDateError) return { ok: false, error: dueDateError }
+      }
+
+      if (payload.aiSuggested !== undefined) {
+        const aiSuggestedError = validateBoolean(payload.aiSuggested, 'aiSuggested')
+        if (aiSuggestedError) return { ok: false, error: aiSuggestedError }
+      }
+
       const db = getDb()
       const id = createTodo(db, payload.content, {
         priority: payload.priority,
@@ -155,6 +220,16 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('todos:list', async (_event, payload?: { status?: 'pending' | 'completed' }) => {
     try {
+      if (payload !== undefined) {
+        const payloadError = validateObject(payload)
+        if (payloadError) return { ok: false, error: payloadError, todos: [] }
+
+        if (payload.status !== undefined) {
+          const statusError = validateEnum(payload.status, 'status', ['pending', 'completed'] as const)
+          if (statusError) return { ok: false, error: statusError, todos: [] }
+        }
+      }
+
       const db = getDb()
       const todos = listTodos(db, payload?.status)
       return { ok: true, todos }
@@ -165,6 +240,13 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('todos:get', async (_event, payload: { id: number }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError, todo: null }
+
+      const idError = validatePositiveInteger(payload.id, 'id')
+      if (idError) return { ok: false, error: idError, todo: null }
+
       const db = getDb()
       const todo = getTodo(db, payload.id)
       return { ok: true, todo }
@@ -175,6 +257,13 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('todos:complete', async (_event, payload: { id: number }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const idError = validatePositiveInteger(payload.id, 'id')
+      if (idError) return { ok: false, error: idError }
+
       const db = getDb()
       const success = completeTodo(db, payload.id)
       return { ok: success }
@@ -185,6 +274,13 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('todos:uncomplete', async (_event, payload: { id: number }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const idError = validatePositiveInteger(payload.id, 'id')
+      if (idError) return { ok: false, error: idError }
+
       const db = getDb()
       const success = uncompleteTodo(db, payload.id)
       return { ok: success }
@@ -200,6 +296,28 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
     dueDate?: string | null
   }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const idError = validatePositiveInteger(payload.id, 'id')
+      if (idError) return { ok: false, error: idError }
+
+      if (payload.content !== undefined) {
+        const contentError = validateString(payload.content, 'content', { minLength: 1, maxLength: 500 })
+        if (contentError) return { ok: false, error: contentError }
+      }
+
+      if (payload.priority !== undefined) {
+        const priorityError = validateNonNegativeInteger(payload.priority, 'priority')
+        if (priorityError) return { ok: false, error: priorityError }
+      }
+
+      if (payload.dueDate !== undefined) {
+        const dueDateError = validateOptionalDate(payload.dueDate, 'dueDate')
+        if (dueDateError) return { ok: false, error: dueDateError }
+      }
+
       const db = getDb()
       const success = updateTodo(db, payload.id, {
         content: payload.content,
@@ -214,6 +332,13 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('todos:delete', async (_event, payload: { id: number }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const idError = validatePositiveInteger(payload.id, 'id')
+      if (idError) return { ok: false, error: idError }
+
       const db = getDb()
       const success = deleteTodo(db, payload.id)
       return { ok: success }
@@ -235,6 +360,13 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   // ─── Memory ───────────────────────────────────────────────────────────────
 
   ipcMain.handle('memory:search', async (_event, payload: { query: string }) => {
+    // Validate payload
+    const payloadError = validateObject(payload)
+    if (payloadError) return { error: payloadError, chunks: [] }
+
+    const queryError = validateString(payload.query, 'query', { minLength: 1, maxLength: 1_000 })
+    if (queryError) return { error: queryError, chunks: [] }
+
     return await retrieveRelevant(payload.query)
   })
 
@@ -246,6 +378,16 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('ccm:update', async (_event, payload: { section: string; data: Record<string, unknown> }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const sectionError = validateString(payload.section, 'section', { minLength: 1, maxLength: 100 })
+      if (sectionError) return { ok: false, error: sectionError }
+
+      const dataError = validateRecord(payload.data, 'data')
+      if (dataError) return { ok: false, error: dataError }
+
       updateCCMSection(getDb(), payload.section, payload.data)
       return { ok: true }
     } catch (err) {
@@ -255,6 +397,16 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('ccm:resolve', async (_event, payload: { id: number; accept: boolean }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const idError = validatePositiveInteger(payload.id, 'id')
+      if (idError) return { ok: false, error: idError }
+
+      const acceptError = validateBoolean(payload.accept, 'accept')
+      if (acceptError) return { ok: false, error: acceptError }
+
       resolveProposal(getDb(), payload.id, payload.accept)
       return { ok: true }
     } catch (err) {
@@ -264,6 +416,18 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('ccm:create-proposal', async (_event, payload: { section: string; key: string; value: unknown }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const sectionError = validateString(payload.section, 'section', { minLength: 1, maxLength: 100 })
+      if (sectionError) return { ok: false, error: sectionError }
+
+      const keyError = validateString(payload.key, 'key', { minLength: 1, maxLength: 100 })
+      if (keyError) return { ok: false, error: keyError }
+
+      // value can be any type - validation happens in createProposal
+
       const id = createProposal(getDb(), payload.section, payload.key, payload.value, null)
       return { ok: true, id }
     } catch (err) {
@@ -283,6 +447,15 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.handle('settings:set', async (_event, payload: { key: string; value: unknown }) => {
     try {
+      // Validate payload
+      const payloadError = validateObject(payload)
+      if (payloadError) return { ok: false, error: payloadError }
+
+      const keyError = validateString(payload.key, 'key', { minLength: 1, maxLength: 100 })
+      if (keyError) return { ok: false, error: keyError }
+
+      // value type validation happens in setSetting
+
       setSetting(payload.key as keyof AppSettings, payload.value as never)
 
       // Emit settings changed event to all windows for real-time updates
@@ -377,18 +550,40 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   })
 
   ipcMain.handle('shell:open-url', async (_event, url: string) => {
+    // Validate URL - only allow specific safe protocols
+    const urlError = validateString(url, 'url', { minLength: 1, maxLength: 2_000 })
+    if (urlError) return { ok: false, error: urlError }
+
+    // Only allow http, https, and system preference URLs (for macOS settings)
+    const allowedProtocols = ['http:', 'https:', 'x-apple.systempreferences:']
+    try {
+      const parsedUrl = new URL(url)
+      if (!allowedProtocols.includes(parsedUrl.protocol)) {
+        return { ok: false, error: `Invalid URL protocol: ${parsedUrl.protocol}. Only http, https, and system preferences are allowed.` }
+      }
+    } catch {
+      return { ok: false, error: 'Invalid URL format' }
+    }
+
     await shell.openExternal(url)
+    return { ok: true }
   })
 
   // ─── Renderer Logs ────────────────────────────────────────────────────────
 
   ipcMain.on('log:renderer', (_event, payload: { level: 'log' | 'warn' | 'error'; args: unknown[] }) => {
-    const level = payload?.level ?? 'log'
-    const args = payload?.args ?? []
+    // Validate payload structure
+    if (!payload || typeof payload !== 'object') return
+
+    const levelError = validateEnum(payload.level, 'level', ['log', 'warn', 'error'] as const)
+    if (levelError) return
+
+    const args = Array.isArray(payload.args) ? payload.args : []
     const prefix = '[Renderer]'
-    if (level === 'error') {
+
+    if (payload.level === 'error') {
       console.error(prefix, ...args)
-    } else if (level === 'warn') {
+    } else if (payload.level === 'warn') {
       console.warn(prefix, ...args)
     } else {
       console.log(prefix, ...args)
@@ -398,6 +593,10 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   // ─── Window ───────────────────────────────────────────────────────────────
 
   ipcMain.on('window:setIgnoreMouseEvents', (_event, ignore: boolean) => {
+    // Validate boolean
+    const ignoreError = validateBoolean(ignore, 'ignore')
+    if (ignoreError) return
+
     mainWindow.setIgnoreMouseEvents(ignore, { forward: true })
   })
 }
