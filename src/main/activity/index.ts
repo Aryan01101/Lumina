@@ -52,6 +52,11 @@ export function startActivityMonitor(mainWindow: BrowserWindow): void {
       // Check if activity monitor is enabled in settings
       const monitorEnabled = getSetting('activityMonitorEnabled')
 
+      // Skip all monitoring when disabled
+      if (!monitorEnabled) {
+        return
+      }
+
       const idleSeconds = powerMonitor.getSystemIdleTime()
 
       // Dynamic require keeps the native module out of the test environment
@@ -76,15 +81,9 @@ export function startActivityMonitor(mainWindow: BrowserWindow): void {
 
         _currentActivity = { state: newState, appName, startedAt: new Date() }
 
-        // Log activity change regardless of monitor enabled/disabled state
-        if (monitorEnabled) {
-          console.log(`[Activity] → ${newState} (${appName})`)
-        } else {
-          console.log(`[Activity] → ${newState} (${appName}) [monitor disabled, logging only]`)
-        }
+        console.log(`[Activity] → ${newState} (${appName})`)
 
-        // Only send state updates to renderer if monitor is enabled
-        if (monitorEnabled && !mainWindow.isDestroyed()) {
+        if (!mainWindow.isDestroyed()) {
           mainWindow.webContents.send('activity:state', { state: newState, appName })
         }
       }
