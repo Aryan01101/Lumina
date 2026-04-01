@@ -1,5 +1,4 @@
 import React from 'react'
-import SessionProgressRing from './SessionProgressRing'
 
 export type AnimationState = 'idle' | 'happy' | 'thinking' | 'concerned' | 'celebrating' | 'sleeping'
 
@@ -9,8 +8,6 @@ interface Props {
   onClick: () => void
   onMouseEnter: () => void
   onMouseLeave: () => void
-  sessionMinutes?: number
-  activityState?: string
   isGhost?: boolean
 }
 
@@ -38,22 +35,12 @@ export default function CompanionCharacter({
   onClick,
   onMouseEnter,
   onMouseLeave,
-  sessionMinutes = 0,
-  activityState = 'BROWSING',
   isGhost = false
 }: Props): React.ReactElement {
   const isSleeping = animationState === 'sleeping'
 
   return (
     <div className="relative">
-      {/* Session Progress Ring - hide in ghost mode */}
-      {!isGhost && (
-        <SessionProgressRing
-          sessionMinutes={sessionMinutes}
-          activityState={activityState}
-        />
-      )}
-
       <button
         onClick={onClick}
         onMouseEnter={onMouseEnter}

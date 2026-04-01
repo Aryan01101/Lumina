@@ -34,7 +34,6 @@ export default function App(): React.ReactElement {
   const [isHovering, setIsHovering]         = useState(false)
   const [isMinimized, setIsMinimized]       = useState(false)
   const [isCornerHover, setIsCornerHover]   = useState(false)
-  const [sessionMinutes, setSessionMinutes] = useState(0)
   const [activityState, setActivityState]   = useState('BROWSING')
   const [activityMonitorEnabled, setActivityMonitorEnabled] = useState(true)
   const [isHoverPreview, setIsHoverPreview] = useState(false)
@@ -47,20 +46,19 @@ export default function App(): React.ReactElement {
     })
   }, [])
 
-  // Poll session info every 10 seconds (removed settings polling - now using real-time events)
+  // Poll activity state every 10 seconds
   useEffect(() => {
-    const updateSessionInfo = async () => {
+    const updateActivityState = async () => {
       try {
         const info = await window.lumina.activity.getCurrentSession()
-        setSessionMinutes(info.sessionMinutes)
         setActivityState(info.activityState)
       } catch (err) {
-        console.error('[App] Failed to get session info:', err)
+        console.error('[App] Failed to get activity state:', err)
       }
     }
 
-    updateSessionInfo()
-    const interval = setInterval(updateSessionInfo, 10_000)
+    updateActivityState()
+    const interval = setInterval(updateActivityState, 10_000)
     return () => clearInterval(interval)
   }, [])
 
@@ -227,8 +225,6 @@ export default function App(): React.ReactElement {
           }}
           onMouseEnter={() => {}}
           onMouseLeave={() => setIsHoverPreview(false)}
-          sessionMinutes={sessionMinutes}
-          activityState={activityState}
           isGhost={false}
         />
       </div>
@@ -346,8 +342,6 @@ export default function App(): React.ReactElement {
           onClick={handleTogglePanel}
           onMouseEnter={() => {}}
           onMouseLeave={() => {}}
-          sessionMinutes={sessionMinutes}
-          activityState={activityState}
         />
       </div>
     </div>
