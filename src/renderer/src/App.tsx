@@ -46,18 +46,13 @@ export default function App(): React.ReactElement {
     })
   }, [])
 
-  // Poll session info and settings every 10 seconds
+  // Poll session info every 10 seconds (removed settings polling - now using real-time events)
   useEffect(() => {
     const updateSessionInfo = async () => {
       try {
         const info = await window.lumina.activity.getCurrentSession()
         setSessionMinutes(info.sessionMinutes)
         setActivityState(info.activityState)
-
-        // Also poll for settings changes (including monitor toggle)
-        const { settings } = await window.lumina.settings.get()
-        const s = settings as { activityMonitorEnabled?: boolean }
-        setActivityMonitorEnabled(s.activityMonitorEnabled ?? true)
       } catch (err) {
         console.error('[App] Failed to get session info:', err)
       }
@@ -66,6 +61,21 @@ export default function App(): React.ReactElement {
     updateSessionInfo()
     const interval = setInterval(updateSessionInfo, 10_000)
     return () => clearInterval(interval)
+  }, [])
+
+  // ─── Real-time settings change listener ───────────────────────────────────
+
+  useEffect(() => {
+    const unsubscribe = window.lumina.settings.onChange((event) => {
+      console.log('[App] Settings changed:', event.key, '=', event.value)
+
+      // Update activity monitor enabled state immediately
+      if (event.key === 'activityMonitorEnabled') {
+        setActivityMonitorEnabled(event.value as boolean)
+      }
+    })
+
+    return unsubscribe
   }, [])
 
   // ─── State-driven mouse capture ───────────────────────────────────────────
@@ -104,16 +114,9 @@ export default function App(): React.ReactElement {
   }, [isSettingsOpen])
 
   const handleClosePanel    = useCallback(() => setIsPanelOpen(false), [])
-  const handleCloseSettings = useCallback(async () => {
+  const handleCloseSettings = useCallback(() => {
     setIsSettingsOpen(false)
-    // Immediately refresh settings to update monitor state and close/open eyes
-    try {
-      const { settings } = await window.lumina.settings.get()
-      const s = settings as { activityMonitorEnabled?: boolean }
-      setActivityMonitorEnabled(s.activityMonitorEnabled ?? true)
-    } catch (err) {
-      console.error('[App] Failed to refresh settings:', err)
-    }
+    // No need to manually refresh - onChange listener handles it immediately
   }, [])
   const handleMinimize      = useCallback(() => {
     setIsMinimized(true)

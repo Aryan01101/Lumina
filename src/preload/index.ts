@@ -120,7 +120,12 @@ contextBridge.exposeInMainWorld('lumina', {
   // ─── Settings ────────────────────────────────────────────────────────────
   settings: {
     get: () => ipcRenderer.invoke('settings:get'),
-    set: (payload: { key: string; value: unknown }) => ipcRenderer.invoke('settings:set', payload)
+    set: (payload: { key: string; value: unknown }) => ipcRenderer.invoke('settings:set', payload),
+    onChange: (callback: (event: { key: string; value: unknown }) => void) => {
+      const listener = (_: unknown, event: { key: string; value: unknown }) => callback(event)
+      ipcRenderer.on('settings:changed', listener)
+      return () => ipcRenderer.removeListener('settings:changed', listener)
+    }
   },
 
   // ─── Metrics ─────────────────────────────────────────────────────────────

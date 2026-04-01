@@ -61,6 +61,7 @@ declare global {
       settings: {
         get: () => Promise<{ settings: unknown }>
         set: (payload: { key: string; value: unknown }) => Promise<{ ok: boolean }>
+        onChange: (callback: (event: { key: string; value: unknown }) => void) => () => void
       }
       metrics: {
         get: () => Promise<{
@@ -74,6 +75,7 @@ declare global {
       }
       activity: {
         onStateChange: (callback: (state: { state: string; appName: string }) => void) => () => void
+        getCurrentSession: () => Promise<{ activityState: string; appName: string; sessionMinutes: number }>
       }
       agent: {
         onStatus: (callback: (status: { actionType: string; message?: string }) => void) => () => void

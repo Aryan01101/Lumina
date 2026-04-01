@@ -284,6 +284,15 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('settings:set', async (_event, payload: { key: string; value: unknown }) => {
     try {
       setSetting(payload.key as keyof AppSettings, payload.value as never)
+
+      // Emit settings changed event to all windows for real-time updates
+      if (!mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('settings:changed', {
+          key: payload.key,
+          value: payload.value
+        })
+      }
+
       return { ok: true }
     } catch (err) {
       return { ok: false, error: (err as Error).message }
