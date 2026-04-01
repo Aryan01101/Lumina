@@ -9,6 +9,7 @@ import cron from 'node-cron'
 import type { BrowserWindow } from 'electron'
 import type { ActivityState } from '../activity'
 import { runAgentCycle } from './index'
+import { getSetting } from '../settings'
 
 const TRANSITION_DELAY_MS = 90_000
 
@@ -22,6 +23,13 @@ export function startScheduler(mainWindow: BrowserWindow): void {
   if (_job) return
 
   _job = cron.schedule('0,30 * * * *', () => {
+    // Skip agent cycle if activity monitor is disabled
+    const monitorEnabled = getSetting('activityMonitorEnabled')
+    if (!monitorEnabled) {
+      console.log('[Agent] Skipping scheduled cycle - activity monitor disabled')
+      return
+    }
+
     runAgentCycle('scheduled', mainWindow).catch(err =>
       console.error('[Agent] Scheduled cycle error:', err)
     )
@@ -51,6 +59,12 @@ export function onActivityTransition(
   to: ActivityState,
   mainWindow: BrowserWindow
 ): void {
+  // Skip transition handling if activity monitor is disabled
+  const monitorEnabled = getSetting('activityMonitorEnabled')
+  if (!monitorEnabled) {
+    return
+  }
+
   if (!WORK_STATES.has(from) || !PASSIVE_STATES.has(to)) return
 
   // Cancel any existing pending transition

@@ -2,6 +2,7 @@ import { powerMonitor } from 'electron'
 import type { BrowserWindow } from 'electron'
 import { classify, loadConfig } from './classifier'
 import { openSession, closeSession, getCurrentSessionMinutes } from './sessions'
+import { getSetting } from '../settings'
 
 export type ActivityState =
   | 'DEEP_WORK'
@@ -48,6 +49,9 @@ export function startActivityMonitor(mainWindow: BrowserWindow): void {
 
   const poll = async (): Promise<void> => {
     try {
+      // Check if activity monitor is enabled in settings
+      const monitorEnabled = getSetting('activityMonitorEnabled')
+
       const idleSeconds = powerMonitor.getSystemIdleTime()
 
       // Dynamic require keeps the native module out of the test environment
@@ -71,9 +75,16 @@ export function startActivityMonitor(mainWindow: BrowserWindow): void {
         openSession(appName, newState, windowTitle)
 
         _currentActivity = { state: newState, appName, startedAt: new Date() }
-        console.log(`[Activity] → ${newState} (${appName})`)
 
-        if (!mainWindow.isDestroyed()) {
+        // Log activity change regardless of monitor enabled/disabled state
+        if (monitorEnabled) {
+          console.log(`[Activity] → ${newState} (${appName})`)
+        } else {
+          console.log(`[Activity] → ${newState} (${appName}) [monitor disabled, logging only]`)
+        }
+
+        // Only send state updates to renderer if monitor is enabled
+        if (monitorEnabled && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send('activity:state', { state: newState, appName })
         }
       }
