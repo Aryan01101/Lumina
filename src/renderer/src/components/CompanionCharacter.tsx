@@ -11,6 +11,7 @@ interface Props {
   onMouseLeave: () => void
   sessionMinutes?: number
   activityState?: string
+  isGhost?: boolean
 }
 
 const animationClass: Record<AnimationState, string> = {
@@ -38,17 +39,20 @@ export default function CompanionCharacter({
   onMouseEnter,
   onMouseLeave,
   sessionMinutes = 0,
-  activityState = 'BROWSING'
+  activityState = 'BROWSING',
+  isGhost = false
 }: Props): React.ReactElement {
   const isSleeping = animationState === 'sleeping'
 
   return (
     <div className="relative">
-      {/* Session Progress Ring */}
-      <SessionProgressRing
-        sessionMinutes={sessionMinutes}
-        activityState={activityState}
-      />
+      {/* Session Progress Ring - hide in ghost mode */}
+      {!isGhost && (
+        <SessionProgressRing
+          sessionMinutes={sessionMinutes}
+          activityState={activityState}
+        />
+      )}
 
       <button
         onClick={onClick}
@@ -57,71 +61,78 @@ export default function CompanionCharacter({
         className={`
           relative flex items-center justify-center
           w-24 h-24 rounded-full cursor-pointer
-          bg-gradient-to-br from-violet-500 to-indigo-600
-          shadow-lg shadow-violet-500/40
           border-2 transition-all duration-300
           focus:outline-none
-          ${isPanelOpen
-            ? 'border-violet-300/60 shadow-violet-400/60 w-16 h-16'
-            : 'border-transparent hover:border-violet-300/40 hover:shadow-violet-500/50'}
-          ${animationClass[animationState]}
+          ${isGhost
+            ? 'bg-transparent border-violet-400/30 border-dashed hover:border-violet-400/50 hover:bg-violet-500/5'
+            : `bg-gradient-to-br from-violet-500 to-indigo-600
+               shadow-lg shadow-violet-500/40
+               ${isPanelOpen
+                 ? 'border-violet-300/60 shadow-violet-400/60 w-16 h-16'
+                 : 'border-transparent hover:border-violet-300/40 hover:shadow-violet-500/50'}
+               ${animationClass[animationState]}`
+          }
         `}
         aria-label="Open Lumina companion panel"
       >
-        {/* Glow ring */}
-        <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-sm" />
+        {/* Glow ring - subtle in ghost mode */}
+        {!isGhost && (
+          <div className="absolute inset-0 rounded-full bg-violet-400/10 blur-sm" />
+        )}
 
-      {/* Face */}
-      <div className="relative flex flex-col items-center gap-1">
-        {/* Eyes */}
-        <div className="flex gap-2.5">
-          <div
-            className={`
-              w-3.5 h-3.5 rounded-full bg-white
-              flex items-center justify-center
-              transition-transform duration-300
-              ${eyeClass[animationState]}
-            `}
-          >
-            {!isSleeping && (
-              <div className="w-2 h-2 rounded-full bg-gray-800 translate-x-px" />
-            )}
-            {isSleeping && (
-              <div className="w-3 h-0.5 rounded-full bg-gray-400" />
-            )}
+      {/* Face - hide in ghost mode */}
+      {!isGhost && (
+        <div className="relative flex flex-col items-center gap-1">
+          {/* Eyes */}
+          <div className="flex gap-2.5">
+            <div
+              className={`
+                w-3.5 h-3.5 rounded-full bg-white
+                flex items-center justify-center
+                transition-transform duration-300
+                ${eyeClass[animationState]}
+              `}
+            >
+              {!isSleeping && (
+                <div className="w-2 h-2 rounded-full bg-gray-800 translate-x-px" />
+              )}
+              {isSleeping && (
+                <div className="w-3 h-0.5 rounded-full bg-gray-400" />
+              )}
+            </div>
+            <div
+              className={`
+                w-3.5 h-3.5 rounded-full bg-white
+                flex items-center justify-center
+                transition-transform duration-300
+                ${eyeClass[animationState]}
+              `}
+            >
+              {!isSleeping && (
+                <div className="w-2 h-2 rounded-full bg-gray-800 translate-x-px" />
+              )}
+              {isSleeping && (
+                <div className="w-3 h-0.5 rounded-full bg-gray-400" />
+              )}
+            </div>
           </div>
-          <div
-            className={`
-              w-3.5 h-3.5 rounded-full bg-white
-              flex items-center justify-center
-              transition-transform duration-300
-              ${eyeClass[animationState]}
-            `}
-          >
-            {!isSleeping && (
-              <div className="w-2 h-2 rounded-full bg-gray-800 translate-x-px" />
-            )}
-            {isSleeping && (
-              <div className="w-3 h-0.5 rounded-full bg-gray-400" />
-            )}
-          </div>
+
+          {/* Mouth */}
+          <div className={`
+            w-4 h-1.5 rounded-full
+            transition-all duration-300
+            ${animationState === 'happy' || animationState === 'celebrating'
+              ? 'bg-white scale-110'
+              : animationState === 'concerned'
+                ? 'bg-white/60 rotate-180 scale-75'
+                : 'bg-white/70 scale-90'
+            }
+          `} />
         </div>
+      )}
 
-        {/* Mouth */}
-        <div className={`
-          w-4 h-1.5 rounded-full
-          transition-all duration-300
-          ${animationState === 'happy' || animationState === 'celebrating'
-            ? 'bg-white scale-110'
-            : animationState === 'concerned'
-              ? 'bg-white/60 rotate-180 scale-75'
-              : 'bg-white/70 scale-90'
-          }
-        `} />
-      </div>
-
-        {/* Thinking dots overlay */}
-        {animationState === 'thinking' && (
+        {/* Thinking dots overlay - hide in ghost mode */}
+        {!isGhost && animationState === 'thinking' && (
           <div className="absolute -top-1 -right-1 flex gap-0.5">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:0ms]" />
             <span className="w-1.5 h-1.5 rounded-full bg-violet-200 animate-bounce [animation-delay:150ms]" />

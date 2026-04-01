@@ -136,7 +136,7 @@ export default function Settings({ onClose }: Props): React.ReactElement {
           >
             <span className={`
               absolute top-1 w-4 h-4 rounded-full bg-white transition-transform duration-200
-              ${settings.activityMonitorEnabled ? 'translate-x-5' : 'translate-x-1'}
+              ${settings.activityMonitorEnabled ? 'translate-x-[22px]' : 'translate-x-1'}
             `} />
           </button>
         </div>

@@ -37,6 +37,7 @@ export default function App(): React.ReactElement {
   const [sessionMinutes, setSessionMinutes] = useState(0)
   const [activityState, setActivityState]   = useState('BROWSING')
   const [activityMonitorEnabled, setActivityMonitorEnabled] = useState(true)
+  const [isHoverPreview, setIsHoverPreview] = useState(false)
 
   useEffect(() => {
     window.lumina.settings.get().then(({ settings }) => {
@@ -82,6 +83,7 @@ export default function App(): React.ReactElement {
   // The window starts in click-through mode (setIgnoreMouseEvents true).
   // We capture the mouse whenever ANY interactive surface is visible.
   // One effect, no gaps — works for early-return modals, panels, hovering.
+  // Ghost mode also needs mouse capture for hover-to-preview and click-to-stay.
   const shouldCaptureMouse =
     showOnboarding ||
     isPanelOpen    ||
@@ -89,7 +91,8 @@ export default function App(): React.ReactElement {
     agentMsg !== null ||
     isHovering ||
     isCornerHover ||
-    isMinimized
+    isMinimized ||
+    (isHidden && !isHoverPreview) // Ghost mode needs interaction
 
   useEffect(() => {
     window.lumina.window.setIgnoreMouseEvents(!shouldCaptureMouse)
@@ -192,8 +195,44 @@ export default function App(): React.ReactElement {
     return off
   }, [isHidden])
 
-  if (isHidden) {
-    return <div className="w-full h-full pointer-events-none" />
+  // Ghost mode: show subtle outline when hidden, preview on hover, stay on click
+  if (isHidden && !isHoverPreview) {
+    return (
+      <div className="w-full h-full flex flex-col justify-end items-end pb-4 pr-4">
+        <CompanionCharacter
+          animationState="idle"
+          isPanelOpen={false}
+          onClick={() => {
+            setIsHidden(false)
+            setIsHoverPreview(false)
+          }}
+          onMouseEnter={() => setIsHoverPreview(true)}
+          onMouseLeave={() => {}}
+          isGhost={true}
+        />
+      </div>
+    )
+  }
+
+  // Preview mode: showing full Lumina on hover, goes back to ghost on mouse leave
+  if (isHidden && isHoverPreview) {
+    return (
+      <div className="w-full h-full flex flex-col justify-end items-end pb-4 pr-4">
+        <CompanionCharacter
+          animationState={animationState}
+          isPanelOpen={false}
+          onClick={() => {
+            setIsHidden(false)
+            setIsHoverPreview(false)
+          }}
+          onMouseEnter={() => {}}
+          onMouseLeave={() => setIsHoverPreview(false)}
+          sessionMinutes={sessionMinutes}
+          activityState={activityState}
+          isGhost={false}
+        />
+      </div>
+    )
   }
 
   if (showOnboarding) {

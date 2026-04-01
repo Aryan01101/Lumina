@@ -61,10 +61,17 @@ export function routeTools(userMessage: string, db?: Database.Database): ToolRes
 
   // Try todo operations (requires database)
   if (db) {
-    // Add todo detection
-    const addTodoMatch = userMessage.match(/(?:add|create|make)\s+(?:a\s+)?(?:todo|task|reminder)(?:\s+to)?\s+(.+)/i)
+    // Add todo detection - improved to handle various phrasings
+    const addTodoMatch = userMessage.match(/(?:add|create|make|set)\s+(?:a\s+)?(?:todo|task|reminder)(?:\s+(?:to|of|about|for))?\s+(.+)/i)
     if (addTodoMatch) {
-      const content = addTodoMatch[1].trim()
+      let content = addTodoMatch[1].trim()
+
+      // Clean up common prefixes that get captured
+      content = content.replace(/^(?:to|of|about|for)\s+/i, '')
+
+      // Capitalize first letter for cleaner task names
+      content = content.charAt(0).toUpperCase() + content.slice(1)
+
       if (content.length > 2) {
         try {
           const id = createTodo(db, content, { aiSuggested: true })
