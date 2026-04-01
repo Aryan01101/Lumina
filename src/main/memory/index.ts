@@ -205,8 +205,8 @@ export async function retrieveRelevant(query: string, topK = 5): Promise<Retriev
   // Stage 1b: keyword search
   const ftsCandidates = fetchFtsCandidates(db, query, 20)
 
-  // Merge and deduplicate
-  const candidates = mergeCandidates(vecCandidates, ftsCandidates, 30)
+  // Merge and deduplicate (up to 12 for optimal reranking performance)
+  const candidates = mergeCandidates(vecCandidates, ftsCandidates)
 
   let chunks: MemoryChunk[] = []
 
@@ -311,6 +311,13 @@ export function initMemoryEngine(): void {
   // Pass userData path to reranker worker so model files stay on-device
   const cacheDir = app.getPath('userData')
   initReranker(cacheDir)
+
+  // Pre-warm reranker to eliminate cold-start latency on first query
+  setImmediate(() => {
+    rerankCandidates('warmup query', ['warmup candidate']).catch(() => {
+      // Warmup failure is non-critical - first real query will trigger model load
+    })
+  })
 
   // Run retention checks at startup
   purgeOldMessages()

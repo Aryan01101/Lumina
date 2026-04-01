@@ -272,7 +272,7 @@ function routeAfterGates(state: GraphState): 'observe' | 'log' {
 export function buildAgentGraph(
   db: Database.Database,
   mainWindow: BrowserWindow
-): ReturnType<typeof StateGraph.prototype.compile> {
+) {
   const graph = new StateGraph(AgentAnnotation)
 
   graph.addNode('gateCheck', makeGateCheckNode(db))
@@ -282,16 +282,16 @@ export function buildAgentGraph(
   graph.addNode('act',       makeActNode(db, mainWindow))
   graph.addNode('log',       makeLogNode(db))
 
-  graph.setEntryPoint('gateCheck')
-  graph.addConditionalEdges('gateCheck', routeAfterGates, {
-    observe: 'observe',
-    log:     'log'
+  graph.setEntryPoint('gateCheck' as any)
+  graph.addConditionalEdges('gateCheck' as any, routeAfterGates, {
+    observe: 'observe' as any,
+    log:     'log' as any
   })
-  graph.addEdge('observe',  'analyse')
-  graph.addEdge('analyse',  'decide')
-  graph.addEdge('decide',   'act')
-  graph.addEdge('act',      'log')
-  graph.addEdge('log',      END)
+  graph.addEdge('observe' as any,  'analyse' as any)
+  graph.addEdge('analyse' as any,  'decide' as any)
+  graph.addEdge('decide' as any,   'act' as any)
+  graph.addEdge('act' as any,      'log' as any)
+  graph.addEdge('log' as any,      END)
 
   return graph.compile()
 }

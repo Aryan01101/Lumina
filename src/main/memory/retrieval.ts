@@ -133,12 +133,12 @@ export function fetchFtsCandidates(
 /**
  * Merge vector and FTS candidates, deduplicate by chunk id.
  * Vector candidates take precedence on duplicate ids (lower cosine distance).
- * Returns up to 30 unique candidates.
+ * Returns up to 12 unique candidates (optimized for reranker throughput).
  */
 export function mergeCandidates(
   vecCandidates: RawCandidate[],
   ftsCandidates: RawCandidate[],
-  maxCandidates = 30
+  maxCandidates = 12
 ): RawCandidate[] {
   const seen = new Map<number, RawCandidate>()
 

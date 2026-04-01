@@ -59,10 +59,6 @@ async function main(): Promise<void> {
         .map((c) => String(c || ''))
         .filter((c) => c.trim().length > 0) // Filter out empty strings
 
-      console.log('[Reranker] Debug - query type:', typeof query, 'length:', query.length)
-      console.log('[Reranker] Debug - candidates count:', candidates.length)
-      console.log('[Reranker] Debug - first candidate type:', typeof candidates[0], 'value:', candidates[0]?.slice(0, 50))
-
       if (!query.trim() || candidates.length === 0) {
         console.log('[Reranker] Skipping - empty query or no candidates')
         parentPort.postMessage({
@@ -79,42 +75,22 @@ async function main(): Promise<void> {
         throw new Error(`Invalid candidate type: ${typeof invalidCandidate}`)
       }
 
-      // Score each [query, candidate] pair
-      // transformers.js text-classification requires object format for sentence pairs
-      const inputs = candidates.map((candidate) => ({
-        text: query,
-        text_pair: candidate
-      }))
-      console.log('[Reranker] Debug - inputs count:', inputs.length, 'first input format:', JSON.stringify(inputs[0], null, 2).slice(0, 150))
-
-      let results
-      try {
-        results = await model(inputs)
-      } catch (modelErr) {
-        console.error('[Reranker] Model call failed. Trying sequential processing...')
-        console.error('[Reranker] Batch error:', modelErr)
-
-        // Fallback: process one pair at a time
-        try {
-          results = []
-          for (let i = 0; i < candidates.length; i++) {
-            const result = await model({ text: query, text_pair: candidates[i] })
-            results.push(result[0]) // Take first result from single-item array
-            console.log(`[Reranker] Processed ${i + 1}/${candidates.length}`)
-          }
-        } catch (seqErr) {
-          console.error('[Reranker] Sequential processing also failed:', seqErr)
-          throw seqErr
-        }
+      // Score each [query, candidate] pair sequentially
+      // Process one at a time - transformers.js batch processing doesn't work reliably for sentence pairs
+      const results: Array<{ label: string; score: number }> = []
+      for (let i = 0; i < candidates.length; i++) {
+        // Cast to any to bypass complex union types - @xenova/transformers has imperfect typing
+        const result = await (model as any)(query, { text_pair: candidates[i] })
+        // Result can be a single object or array depending on API version
+        const output = Array.isArray(result) ? result[0] : result
+        results.push(output)
       }
 
       // Extract the relevance score from each result
       // ms-marco returns label 'LABEL_0' (irrelevant, low score) or 'LABEL_1' (relevant, high)
-      const scores: number[] = Array.isArray(results)
-        ? results.map((r: { label: string; score: number }) =>
-            r.label === 'LABEL_1' ? r.score : 1 - r.score
-          )
-        : candidates.map(() => 0)
+      const scores: number[] = results.map((r) =>
+        r.label === 'LABEL_1' ? r.score : 1 - r.score
+      )
 
       parentPort.postMessage({ id: msg.id, scores })
     } catch (err) {
