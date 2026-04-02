@@ -5,7 +5,6 @@
  * Each control calls window.lumina.settings.set immediately on change.
  */
 import React, { useEffect, useState } from 'react'
-import type { AppSettings } from '../../../main/settings'
 
 interface Props {
   onClose: () => void

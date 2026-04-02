@@ -31,6 +31,17 @@ coverage/
 # Vitest
 .vitest-cache/
 
+# Playwright
+playwright-report/
+test-results/
+
+# TypeScript
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+
 # Python eval (venv)
 tests/eval/.venv/
 tests/eval/__pycache__/

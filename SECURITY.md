@@ -15,11 +15,14 @@ This document outlines Lumina's security architecture, design decisions, and kno
 ```
 default-src 'self';
 script-src 'self';
-style-src 'self';
+style-src 'self' 'unsafe-inline';
 ```
-- No external scripts allowed
-- No inline scripts or styles (XSS protection)
-- All resources must be from same origin
+- **script-src 'self'** - No inline scripts allowed (strong XSS protection)
+- **style-src 'self' 'unsafe-inline'** - Allows inline styles for Vite dev mode and Tailwind
+  - Safe because: all code is bundled/local, Tailwind uses classes (not inline HTML styles), no remote content
+  - Vite's dev server injects styles as `<style>` tags for HMR, requiring 'unsafe-inline'
+  - Production builds could use stricter CSP with hashes, but not worth complexity for local-only app
+- All resources must be from same origin ('self' only)
 
 **IPC Security** (`src/main/ipc/index.ts`, `src/main/ipc/validators.ts`):
 - All IPC handlers validate input types, lengths, and ranges

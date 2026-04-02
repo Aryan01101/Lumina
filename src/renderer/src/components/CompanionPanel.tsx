@@ -14,7 +14,6 @@ import MoodCheck from './MoodCheck'
 import CCMProposals from './CCMProposals'
 import ToolResult from './ToolResult'
 import FocusTab from './FocusTab'
-import type { CCMProposal } from '../../../main/ccm'
 import { formatGroundednessScore } from '../utils/format'
 
 interface ToolResultData {

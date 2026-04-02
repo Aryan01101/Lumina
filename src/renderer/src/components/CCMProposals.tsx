@@ -4,7 +4,6 @@
  * Shows pending companion core memory proposals for user accept/reject.
  */
 import React, { useState } from 'react'
-import type { CCMProposal } from '../../../main/ccm'
 
 interface Props {
   proposals: CCMProposal[]

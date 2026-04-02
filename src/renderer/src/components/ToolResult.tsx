@@ -11,7 +11,7 @@ interface CalculatorData {
 }
 
 interface ToolResultProps {
-  tool: 'calculator' | 'alarm' | 'timer' | 'schedule'
+  tool: 'calculator' | 'alarm' | 'timer' | 'schedule' | 'add_todo' | 'complete_todo' | 'list_todos'
   success: boolean
   data?: unknown
   message?: string

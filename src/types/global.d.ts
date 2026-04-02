@@ -3,6 +3,41 @@
  * can use window.lumina with full type safety.
  */
 declare global {
+  /** CCM (Companion Core Memory) data structure */
+  interface CCMData {
+    userFacts: Record<string, unknown>
+    userPatterns: Record<string, unknown>
+    relationshipNotes: Record<string, unknown>
+    toneCalibration: {
+      formal_casual: number
+      directness: number
+      humour: number
+      checkin_frequency: 'relaxed' | 'normal' | 'active'
+    }
+    version: number
+  }
+
+  /** CCM update proposal awaiting user approval */
+  interface CCMProposal {
+    id: number
+    section: keyof CCMData
+    proposedKey: string
+    proposedValue: unknown
+    sourceMessageId: number | null
+    status: 'pending' | 'accepted' | 'rejected'
+    createdAt: string
+  }
+
+  /** Application settings */
+  interface AppSettings {
+    model: string
+    activityMonitorEnabled: boolean
+    checkinFrequency: 'relaxed' | 'normal' | 'active'
+    observability: 'off' | 'local' | 'langfuse'
+    langfuseKey: string
+    onboardingComplete: boolean
+  }
+
   interface Window {
     lumina: {
       journal: {
@@ -36,7 +71,7 @@ declare global {
         onDelta: (callback: (delta: string) => void) => () => void
         onDone: (callback: (result: { groundedness_score: number | null; error?: string | null }) => void) => () => void
         onToolResult: (callback: (result: {
-          tool: 'calculator' | 'alarm' | 'timer' | 'schedule'
+          tool: 'calculator' | 'alarm' | 'timer' | 'schedule' | 'add_todo' | 'complete_todo' | 'list_todos'
           success: boolean
           data?: unknown
           message?: string
@@ -47,15 +82,25 @@ declare global {
           value: 'frustrated' | 'okay' | 'good' | 'amazing'
         }) => Promise<{ id: number }>
       }
+      todos: {
+        create: (payload: { content: string; priority?: number; dueDate?: string; aiSuggested?: boolean }) => Promise<{ ok: boolean; id?: number; error?: string }>
+        list: (payload?: { status?: 'pending' | 'completed' }) => Promise<{ ok: boolean; todos?: Array<unknown>; error?: string }>
+        get: (payload: { id: number }) => Promise<{ ok: boolean; todo?: unknown; error?: string }>
+        complete: (payload: { id: number }) => Promise<{ ok: boolean; error?: string }>
+        uncomplete: (payload: { id: number }) => Promise<{ ok: boolean; error?: string }>
+        update: (payload: { id: number; content?: string; priority?: number; dueDate?: string | null }) => Promise<{ ok: boolean; error?: string }>
+        delete: (payload: { id: number }) => Promise<{ ok: boolean; error?: string }>
+        stats: () => Promise<{ ok: boolean; stats?: unknown; error?: string }>
+      }
       memory: {
         search: (query: string) => Promise<{ chunks: unknown[] }>
       }
       ccm: {
-        get: () => Promise<{ ccm: import('../main/ccm').CCMData | null }>
+        get: () => Promise<{ ccm: CCMData | null }>
         update: (payload: { section: string; data: Record<string, unknown> }) => Promise<{ ok: boolean; error?: string }>
         resolve: (payload: { id: number; accept: boolean }) => Promise<{ ok: boolean; error?: string }>
         createProposal: (payload: { section: string; key: string; value: unknown }) => Promise<{ ok: boolean; id?: number; error?: string }>
-        getPending: () => Promise<{ proposals: import('../main/ccm').CCMProposal[] }>
+        getPending: () => Promise<{ proposals: CCMProposal[] }>
         onPropose: (callback: (proposal: { fact: string; source: string }) => void) => () => void
       }
       settings: {
