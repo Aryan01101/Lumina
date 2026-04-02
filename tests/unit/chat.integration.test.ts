@@ -220,7 +220,7 @@ describe('handleChatMessage', () => {
     })
     expect(win.sentDeltas()).toContain('Hello')
     expect(win.sentDeltas()).toContain(' there')
-    expect(win.sentDone()).toEqual({ groundedness_score: null })
+    expect(win.sentDone()).toEqual({ groundedness_score: null, error: null })
   })
 
   it('persists user message and assistant message to messages table', async () => {

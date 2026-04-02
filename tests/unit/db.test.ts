@@ -105,11 +105,11 @@ describe('Database migrations', () => {
     expect(row!.id).toBe(1)
   })
 
-  it('records schema version 1', () => {
+  it('records schema version 3', () => {
     const row = db
       .prepare('SELECT MAX(version) as version FROM schema_version')
       .get() as { version: number }
-    expect(row.version).toBe(1)
+    expect(row.version).toBe(3)
   })
 
   it('is idempotent — running migrations twice does not throw', () => {
